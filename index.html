@@ -104,10 +104,15 @@
             medalActiveCat: categories[0],
             deleteConfirmId: null,
 
-            // Reg Form State (to persist during tab switches)
-            regActiveCat: categories[0],
+            // Reg Form State (persists values between re-renders to prevent typing focus loss)
+            regActiveCat: categories[1], // Default: Tahap 1
             isManualMode: false,
-            selectedAcara: []
+            selectedAcara: [],
+            regForm: {
+                name: '',
+                kelas: '',
+                gender: ''
+            }
         };
 
         function saveData() {
@@ -115,6 +120,24 @@
             localStorage.setItem('olahragaStudentDB', JSON.stringify(state.studentDB));
             localStorage.setItem('olahragaAdminConfig', JSON.stringify(state.adminConfig));
             localStorage.setItem('olahragaMedalResults', JSON.stringify(state.medalResults));
+        }
+
+        // Search house database robustly (supports case-insensitive searches)
+        function getStudentsForHouse(houseName) {
+            if (!state.studentDB) return [];
+            const matchedKey = Object.keys(state.studentDB).find(
+                k => k.trim().toLowerCase() === houseName.trim().toLowerCase()
+            );
+            return matchedKey ? state.studentDB[matchedKey] : [];
+        }
+
+        // Search house database and filter by category (robust case-insensitive)
+        function getStudentsForHouseAndCategory(houseName, categoryName) {
+            const houseStudents = getStudentsForHouse(houseName);
+            return houseStudents.filter(s => {
+                if (!s || !s.name || !s.category) return false;
+                return s.category.toString().trim().toLowerCase() === categoryName.toString().trim().toLowerCase();
+            });
         }
 
         async function fetchFromGoogleSheet() {
@@ -559,11 +582,14 @@
                 `;
             });
 
-            // Filter students robustly
-            const studentsInCat = (state.studentDB[hName] || []).filter(s => s && s.category && s.category.trim().toLowerCase() === activeCat.trim().toLowerCase());
+            // Filter students using our robust search logic
+            const studentsInCat = getStudentsForHouseAndCategory(hName, activeCat);
 
+            // Populate Dropdown Options
             let nameSelectHtml = `<option value="">-- Pilih Nama Murid --</option>`;
-            studentsInCat.forEach(s => { nameSelectHtml += `<option value="${s.name}">${s.name}</option>`; });
+            studentsInCat.forEach(s => { 
+                nameSelectHtml += `<option value="${s.name}" ${state.regForm.name === s.name ? 'selected' : ''}>${s.name}</option>`; 
+            });
 
             let acaraBtns = '';
             availableEvents.forEach(a => {
@@ -611,28 +637,28 @@
                                 <div>
                                     <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">${state.isManualMode ? 'Nama Murid (Taip Manual)' : 'Pilih Nama (Dari Awan)'}</label>
                                     ${!state.isManualMode ? `
-                                        <select id="regName" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base cursor-pointer" onchange="autoFillClassGender(this.value)" required>
+                                        <select id="regName" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base cursor-pointer" onchange="handleNameSelect(this.value)" required>
                                             ${nameSelectHtml}
                                         </select>
                                     ` : `
-                                        <input id="regName" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base" placeholder="Contoh: Ahmad Ali" required />
+                                        <input id="regName" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base" placeholder="Contoh: Ahmad Ali" oninput="handleManualNameInput(this.value)" value="${state.regForm.name || ''}" required />
                                     `}
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-3 md:gap-4">
                                     <div>
                                         <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Kelas</label>
-                                        <input id="regKelas" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base ${!state.isManualMode ? 'bg-slate-200 cursor-not-allowed' : 'bg-white focus:border-indigo-400 focus:outline-none'}" placeholder="Kelas" ${!state.isManualMode ? 'readonly' : ''} required />
+                                        <input id="regKelas" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base ${!state.isManualMode ? 'bg-slate-200 cursor-not-allowed' : 'bg-white focus:border-indigo-400 focus:outline-none'}" placeholder="Kelas" ${!state.isManualMode ? 'readonly' : 'oninput="handleKelasInput(this.value)"'} value="${state.regForm.kelas || ''}" required />
                                     </div>
                                     <div>
                                         <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Jantina</label>
                                         ${!state.isManualMode ? `
-                                            <input id="regGender" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-200 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base cursor-not-allowed" placeholder="Jantina" readonly required />
+                                            <input id="regGender" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-200 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base cursor-not-allowed" placeholder="Jantina" value="${state.regForm.gender || ''}" readonly required />
                                         ` : `
-                                            <select id="regGender" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base focus:border-indigo-400 focus:outline-none" required>
+                                            <select id="regGender" onchange="handleGenderSelect(this.value)" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base focus:border-indigo-400 focus:outline-none" required>
                                                 <option value="">-- Pilih --</option>
-                                                <option value="Lelaki">Lelaki</option>
-                                                <option value="Perempuan">Perempuan</option>
+                                                <option value="Lelaki" ${state.regForm.gender === 'Lelaki' ? 'selected' : ''}>Lelaki</option>
+                                                <option value="Perempuan" ${state.regForm.gender === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
                                             </select>
                                         `}
                                     </div>
@@ -777,6 +803,11 @@
                     state.authModal = { isOpen: true, targetHouse: target, error: false };
                 } else { state.activeTab = target; }
             } else { state.activeTab = target; }
+            
+            // Clear inputs when switching tab
+            state.regForm = { name: '', kelas: '', gender: '' };
+            state.selectedAcara = [];
+            
             renderApp();
         };
 
@@ -809,35 +840,68 @@
             saveData(); renderApp();
         };
 
-        window.setRegCat = (cat) => { state.regActiveCat = cat; state.selectedAcara = []; renderApp(); };
-        window.setManualMode = (val) => { state.isManualMode = val; state.selectedAcara = []; renderApp(); };
+        window.setRegCat = (cat) => { 
+            state.regActiveCat = cat; 
+            state.selectedAcara = []; 
+            state.regForm = { name: '', kelas: '', gender: '' };
+            renderApp(); 
+        };
+        window.setManualMode = (val) => { 
+            state.isManualMode = val; 
+            state.selectedAcara = []; 
+            state.regForm = { name: '', kelas: '', gender: '' };
+            renderApp(); 
+        };
         
-        window.autoFillClassGender = (val) => {
-            if(!state.isManualMode) {
-                const students = state.studentDB[state.activeTab] || [];
-                const s = students.find(st => st.name === val);
-                document.getElementById('regKelas').value = s ? s.kelas : '';
-                document.getElementById('regGender').value = s ? s.gender : '';
-            }
+        // Two-way Binding Handlers (Preserves text input in memory dynamically)
+        window.handleNameSelect = (val) => {
+            state.regForm.name = val;
+            const students = getStudentsForHouseAndCategory(state.activeTab, state.regActiveCat);
+            const s = students.find(st => st.name === val);
+            state.regForm.kelas = s ? s.kelas : '';
+            state.regForm.gender = s ? s.gender : '';
+            renderApp(); // Dropdown selection triggers full layout refresh safely
+        };
+
+        window.handleManualNameInput = (val) => {
+            state.regForm.name = val;
+        };
+
+        window.handleKelasInput = (val) => {
+            state.regForm.kelas = val;
+        };
+
+        window.handleGenderSelect = (val) => {
+            state.regForm.gender = val;
         };
 
         window.toggleAcaraBtn = (a) => {
             if (state.selectedAcara.includes(a)) { state.selectedAcara = state.selectedAcara.filter(x => x !== a); } 
             else { state.selectedAcara.push(a); }
-            renderApp(); // Re-render to show ticks, input values might reset if not handled, but we read them on submit.
-            // Note: In vanilla JS, full re-render clears inputs. Workaround: Restore them if needed, or rely on users completing form before selecting acara.
-            // Better UX: Don't re-render entire app, just update the buttons. But for simplicity and safety, we re-render. 
+            renderApp(); 
         };
 
         window.submitReg = (e) => {
             e.preventDefault();
-            const name = document.getElementById('regName').value;
-            const kelas = document.getElementById('regKelas').value;
-            const gender = document.getElementById('regGender').value;
-            if (!name || !kelas || state.selectedAcara.length === 0) return;
+            const name = state.regForm.name;
+            const kelas = state.regForm.kelas;
+            const gender = state.regForm.gender;
             
-            handleAddParticipant({ id: Date.now(), name, kelas, gender, acara: [...state.selectedAcara], house: state.activeTab, category: state.regActiveCat });
+            if (!name || !kelas || !gender || state.selectedAcara.length === 0) return;
+            
+            handleAddParticipant({ 
+                id: Date.now(), 
+                name, 
+                kelas, 
+                gender, 
+                acara: [...state.selectedAcara], 
+                house: state.activeTab, 
+                category: state.regActiveCat 
+            });
+            
+            // Clean values on successful registration
             state.selectedAcara = [];
+            state.regForm = { name: '', kelas: '', gender: '' };
             renderApp();
         };
 
@@ -869,14 +933,14 @@
             document.getElementById('app').innerHTML = appHtml;
             renderModals();
             
-            // Render icons for dynamically injected HTML
+            // Re-render Lucide Icons dynamically
             lucide.createIcons();
         }
 
-        // Init App
+        // Initialize Web Application
         document.addEventListener('DOMContentLoaded', () => {
             renderApp();
-            fetchFromGoogleSheet(); // Initial data sync
+            fetchFromGoogleSheet(); // Background sync with sheet on boot
         });
 
     </script>
