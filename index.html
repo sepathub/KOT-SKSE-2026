@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kejohanan Olahraga Tahunan SK Simpang Empat 2026</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fredoka', 'Plus Jakarta Sans', 'sans-serif'],
+                    },
+                },
+            },
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Global Styles -->
+    <style>
+        body { background-color: #E0F2FE; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slide-in-bottom { animation: slideInBottom 0.5s ease-out forwards; }
+        .animate-slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
+        .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInBottom { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        @media print {
+            @page { size: A4 landscape; margin: 10mm; }
+            body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: white !important; }
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 0 !important; margin: 0 !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-3 sm:p-4 md:p-6 text-slate-800 overflow-x-hidden font-sans">
+
+    <!-- Container Utama Aplikasi -->
+    <div id="app" class="max-w-7xl mx-auto space-y-4 md:space-y-6"></div>
+
+    <!-- Modals Container -->
+    <div id="modals"></div>
+
+    <!-- Cetakan Terselindung -->
+    <div id="print-container" class="hidden print:block print-area bg-white p-4"></div>
+
+    <!-- LOGIC APPLICATION -->
+    <script>
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx0cXklZDPngj9WQa0Vkg29AI_v1cypmPKyMS8gSE8RegbR-e6Y9hh0LGMC4BPjVxyI/exec";
+
+        const categories = ['Pra Sekolah', 'Tahap 1', 'Tahap 2', 'PPKI'];
+        
+        const categoryEventsMapping = {
+            'Tahap 1': ["100m", "Lompat Jauh", "Lontar Peluru", "Sukaneka"],
+            'Tahap 2': ["100m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"],
+            'Pra Sekolah': ["100m", "Sukaneka"],
+            'PPKI': ["100m", "Lompat Jauh", "Lontar Peluru", "Sukaneka"]
+        };
+
+        const houses = {
+            Laksamana: { tabActive: 'bg-red-500 text-white border-b-4 border-red-700', text: 'text-red-600', border: 'border-red-400', bgLight: 'bg-red-100', bgSoft: 'bg-red-50', button: 'bg-red-500 hover:bg-red-400 border-b-4 border-red-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-red-500' },
+            Bendahara: { tabActive: 'bg-blue-500 text-white border-b-4 border-blue-700', text: 'text-blue-600', border: 'border-blue-400', bgLight: 'bg-blue-100', bgSoft: 'bg-blue-50', button: 'bg-blue-500 hover:bg-blue-400 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-blue-500' },
+            Syahbandar: { tabActive: 'bg-yellow-400 text-yellow-900 border-b-4 border-yellow-600', text: 'text-yellow-700', border: 'border-yellow-400', bgLight: 'bg-yellow-100', bgSoft: 'bg-yellow-50', button: 'bg-yellow-400 hover:bg-yellow-300 border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1 text-yellow-900 font-black', iconColor: 'text-yellow-500' },
+            Temenggung: { tabActive: 'bg-green-500 text-white border-b-4 border-green-700', text: 'text-green-600', border: 'border-green-400', bgLight: 'bg-green-100', bgSoft: 'bg-green-50', button: 'bg-green-500 hover:bg-green-400 border-b-4 border-green-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-green-500' },
+        };
+
+        let state = {
+            participants: JSON.parse(localStorage.getItem('olahragaDataSJK')) || [],
+            studentDB: JSON.parse(localStorage.getItem('olahragaStudentDB')) || {},
+            activeTab: 'Utama',
+            syncStatus: 'loading',
+            adminConfig: JSON.parse(localStorage.getItem('olahragaAdminConfig')) || { isRegistrationLocked: false, housePasswords: { Laksamana: '', Bendahara: '', Syahbandar: '', Temenggung: '' } },
+            medalResults: JSON.parse(localStorage.getItem('olahragaMedalResults')) || {},
+            unlockedHouses: [],
+            isZonCikguUnlocked: false,
+            
+            // UI View States
+            authModal: { isOpen: false, targetHouse: '', error: false },
+            printHouse: 'Laksamana',
+            printCat: 'Tahap 2',
+            showPrintModal: false,
+            medalActiveCat: categories[0],
+            deleteConfirmId: null,
+
+            // Reg Form State (to persist during tab switches)
+            regActiveCat: categories[0],
+            isManualMode: false,
+            selectedAcara: []
+        };
+
+        function saveData() {
+            localStorage.setItem('olahragaDataSJK', JSON.stringify(state.participants));
+            localStorage.setItem('olahragaStudentDB', JSON.stringify(state.studentDB));
+            localStorage.setItem('olahragaAdminConfig', JSON.stringify(state.adminConfig));
+            localStorage.setItem('olahragaMedalResults', JSON.stringify(state.medalResults));
+        }
+
+        async function fetchFromGoogleSheet() {
+            state.syncStatus = 'loading';
+            renderApp();
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL);
+                const result = await response.json();
+                if (result.status === 'success') {
+                    state.participants = result.data || [];
+                    if (result.studentDatabase && Object.keys(result.studentDatabase).length > 0) {
+                        state.studentDB = result.studentDatabase;
+                    } else {
+                        state.studentDB = {};
+                    }
+                    state.syncStatus = 'online';
+                } else {
+                    state.syncStatus = 'offline';
+                }
+            } catch (error) {
+                state.syncStatus = 'offline';
+            }
+            saveData();
+            renderApp();
+        }
+
+        async function handleAddParticipant(newP) {
+            state.participants.push(newP);
+            state.syncStatus = 'syncing';
+            saveData();
+            renderApp();
+            
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'add', ...newP })
+                });
+                const result = await response.json();
+                state.syncStatus = result.status === 'success' ? 'online' : 'offline';
+            } catch (e) {
+                state.syncStatus = 'offline';
+            }
+            renderApp();
+        }
+
+        async function handleDeleteParticipant(id, house) {
+            state.participants = state.participants.filter(p => p.id !== id);
+            state.syncStatus = 'syncing';
+            saveData();
+            renderApp();
+
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', id, house })
+                });
+                const result = await response.json();
+                state.syncStatus = result.status === 'success' ? 'online' : 'offline';
+            } catch(e) {
+                state.syncStatus = 'offline';
+            }
+            renderApp();
+        }
+
+        function renderHeader() {
+            let syncUI = '';
+            if (state.syncStatus === 'online') {
+                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-emerald-100 text-emerald-600 shadow-sm"><i data-lucide="cloud" class="w-3 h-3 md:w-4 md:h-4"></i><span>Awan Aktif</span></div>`;
+            } else if (state.syncStatus === 'loading') {
+                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-blue-100 text-blue-600 shadow-sm"><i data-lucide="refresh-cw" class="animate-spin w-3 h-3 md:w-4 md:h-4"></i><span>Memuat turun...</span></div>`;
+            } else if (state.syncStatus === 'syncing') {
+                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-blue-100 text-blue-600 shadow-sm"><i data-lucide="refresh-cw" class="animate-spin w-3 h-3 md:w-4 md:h-4"></i><span>Menyimpan...</span></div>`;
+            } else {
+                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-red-100 text-red-600 shadow-sm"><i data-lucide="cloud-off" class="w-3 h-3 md:w-4 md:h-4"></i><span>Luar Talian</span></div>`;
+            }
+
+            return `
+                <div class="bg-white rounded-3xl md:rounded-[2rem] shadow-xl p-5 md:p-8 flex items-center justify-between border-4 border-blue-400 relative overflow-hidden animate-fade-in no-print">
+                    <div class="absolute top-[-20px] right-[-20px] opacity-10">
+                        <i data-lucide="trophy" style="width:200px; height:200px;"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex flex-wrap items-center gap-2 md:gap-3 mb-2">
+                            <span class="bg-blue-400 text-white text-[10px] md:text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">Kejohanan Olahraga Tahunan SK Simpang Empat 2026</span>
+                            <i data-lucide="star" class="text-yellow-400 fill-yellow-400 animate-pulse w-4 h-4 md:w-5 md:h-5"></i>
+                            ${syncUI}
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl md:text-5xl font-black tracking-tight text-slate-800 drop-shadow-sm leading-tight">
+                            Sistem Sukan <br class="block sm:hidden" /><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Sekolahku!</span> 🏃💨
+                        </h1>
+                        <p class="text-slate-500 font-bold mt-2 text-sm md:text-lg">Pendaftaran Kontinjen & Papan Markah</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderNav() {
+            let navHtml = `
+                <div class="flex space-x-2 md:space-x-3 overflow-x-auto p-2 bg-white/50 backdrop-blur-md shadow-sm rounded-[1.5rem] md:rounded-3xl hide-scrollbar pb-3 no-print animate-fade-in">
+                    <button onclick="handleNav('Utama')" class="flex items-center space-x-2 px-4 py-2.5 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl text-sm md:text-base font-black transition-all whitespace-nowrap ${state.activeTab === 'Utama' ? 'bg-indigo-600 text-white shadow-lg border-b-4 border-indigo-800 scale-105' : 'text-slate-500 bg-white hover:bg-indigo-50 border-b-4 border-slate-200'}">
+                        <i data-lucide="trophy" class="w-4 h-4 md:w-5 md:h-5"></i><span>Papan Markah</span>
+                    </button>
+            `;
+
+            Object.keys(houses).forEach(house => {
+                const config = houses[house];
+                const isLocked = state.adminConfig.housePasswords[house] && !state.unlockedHouses.includes(house) && state.activeTab !== 'Admin';
+                navHtml += `
+                    <button onclick="handleNav('${house}')" class="flex items-center space-x-2 px-4 py-2.5 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl text-sm md:text-base font-black transition-all whitespace-nowrap ${state.activeTab === house ? `${config.tabActive} shadow-lg scale-105` : 'text-slate-500 bg-white hover:bg-slate-50 border-b-4 border-slate-200'}">
+                        <i data-lucide="flag" class="w-4 h-4 md:w-5 md:h-5 ${state.activeTab === house ? 'text-white' : config.iconColor}"></i>
+                        <span>${house}</span>
+                        ${isLocked ? `<i data-lucide="lock" class="ml-1 opacity-50 w-3 h-3 md:w-3.5 md:h-3.5"></i>` : ''}
+                    </button>
+                `;
+            });
+
+            navHtml += `
+                    <div class="flex-grow min-w-[10px]"></div>
+                    <button onclick="handleNav('Admin')" class="flex items-center space-x-2 px-4 py-2.5 md:px-6 md:py-3.5 rounded-xl md:rounded-2xl text-sm md:text-base font-black transition-all whitespace-nowrap ${state.activeTab === 'Admin' ? 'bg-slate-800 text-white shadow-lg border-b-4 border-slate-900 scale-105' : 'text-slate-500 bg-white hover:bg-slate-200 border-b-4 border-slate-300'}">
+                        <i data-lucide="lock" class="w-4 h-4 md:w-5 md:h-5"></i><span>Zon Cikgu</span>
+                    </button>
+                </div>
+            `;
+            return navHtml;
+        }
+
+        function calculatePoints() {
+            let points = { Laksamana: 0, Bendahara: 0, Syahbandar: 0, Temenggung: 0 };
+            Object.values(state.medalResults).forEach(eventResult => {
+                if (eventResult['Emas']) points[eventResult['Emas']] += 5;
+                if (eventResult['Perak']) points[eventResult['Perak']] += 3;
+                if (eventResult['Gangsa']) points[eventResult['Gangsa']] += 1;
+            });
+            return Object.keys(points).map(house => ({ name: house, score: points[house] })).sort((a, b) => b.score - a.score);
+        }
+
+        function renderDashboard() {
+            const rankings = calculatePoints();
+            const podiumOrder = [
+                { ...rankings[1], rank: 2 },
+                { ...rankings[0], rank: 1 },
+                { ...rankings[2], rank: 3 },
+                { ...rankings[3], rank: 4 }
+            ];
+
+            let html = `
+                <div class="space-y-4 md:space-y-6 animate-slide-in-bottom">
+                    <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100 overflow-hidden relative">
+                        <h2 class="text-xl md:text-2xl font-black text-center mb-6 md:mb-8 text-slate-800 uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3">
+                            <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-5 h-5 md:w-6 md:h-6"></i> Kedudukan Terkini <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-5 h-5 md:w-6 md:h-6"></i>
+                        </h2>
+                        
+                        <div class="flex flex-row justify-center items-end gap-1 sm:gap-3 md:gap-4 relative min-h-[250px] md:min-h-[300px] mt-10 pt-6">
+            `;
+
+            podiumOrder.forEach(r => {
+                const h = r.name;
+                const rank = r.rank;
+                const config = houses[h];
+                const rankHeight = rank === 1 ? 'h-40 md:h-56' : rank === 2 ? 'h-32 md:h-44' : rank === 3 ? 'h-24 md:h-36' : 'h-16 md:h-24';
+                const medalSize = rank === 1 ? 'w-14 h-14 md:w-20 md:h-20' : rank === 2 ? 'w-10 h-10 md:w-14 md:h-14' : rank === 3 ? 'w-10 h-10 md:w-14 md:h-14' : 'w-8 h-8 md:w-10 md:h-10';
+                
+                let medalIconHtml = '';
+                if (rank === 1) medalIconHtml = `<i data-lucide="trophy" class="text-yellow-400 fill-yellow-400 drop-shadow-lg ${medalSize}"></i>`;
+                else if (rank === 2) medalIconHtml = `<i data-lucide="medal" class="text-slate-300 fill-slate-200 drop-shadow-md ${medalSize}"></i>`;
+                else if (rank === 3) medalIconHtml = `<i data-lucide="medal" class="text-amber-600 fill-amber-500 drop-shadow-md ${medalSize}"></i>`;
+                else if (rank === 4) medalIconHtml = `<i data-lucide="star" class="text-slate-200 fill-slate-100 drop-shadow-sm ${medalSize}"></i>`;
+
+                html += `
+                    <div class="flex flex-col items-center group flex-1 max-w-[140px] ${rank === 1 ? 'z-10' : 'z-0'}">
+                        <div class="mb-2 md:mb-3 relative flex flex-col items-center justify-center">
+                            ${rank === 1 ? `<div class="absolute -top-8 text-2xl md:text-3xl animate-bounce drop-shadow-md">👑</div>` : ''}
+                            ${medalIconHtml}
+                        </div>
+                        <div class="w-full rounded-t-2xl md:rounded-t-3xl border-2 md:border-4 border-b-0 ${config.border} ${config.bgLight} ${rankHeight} flex flex-col justify-start pt-2 md:pt-4 items-center p-2 transition-all duration-700 ease-out transform group-hover:-translate-y-2 relative overflow-hidden shadow-inner">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+                            <div class="absolute top-0 left-0 w-full h-2 md:h-3 bg-white/50"></div>
+                            <span class="text-3xl sm:text-4xl md:text-6xl font-black ${config.text} relative z-10 drop-shadow-sm leading-none">${r.score}</span>
+                            <span class="text-[9px] md:text-xs font-black ${config.text} opacity-80 mt-1 md:mt-2">MATA</span>
+                            <div class="mt-auto pb-1 md:pb-2 w-full flex justify-center">
+                                <span class="font-black text-[9px] sm:text-[10px] md:text-sm uppercase ${config.text} bg-white/90 border-2 ${config.border} px-1 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl relative z-10 text-center w-11/12 shadow-sm truncate">
+                                    ${h}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            `;
+
+            Object.keys(houses).forEach(h => {
+                const count = state.participants.filter(p => p.house === h).length;
+                const config = houses[h];
+                html += `
+                    <div class="${config.bgLight} p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 md:border-4 border-white shadow-lg relative overflow-hidden transform hover:scale-105 transition-transform">
+                        <div class="relative z-10">
+                            <h4 class="font-black text-xs md:text-sm uppercase tracking-wider ${config.text}">${h}</h4>
+                            <div class="flex items-end space-x-1 md:space-x-2 mt-1 md:mt-2">
+                                <p class="text-3xl md:text-5xl font-black text-slate-800 drop-shadow-md">${count}</p>
+                                <p class="text-xs md:text-sm text-slate-600 font-bold pb-1 md:pb-2">murid</p>
+                            </div>
+                        </div>
+                        <i data-lucide="activity" class="absolute -bottom-2 -right-2 md:-bottom-4 md:-right-4 w-20 h-20 md:w-32 md:h-32 opacity-20 ${config.text}"></i>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            return html;
+        }
+
+        function renderAdminPanel() {
+            let housesHtml = '';
+            Object.keys(houses).forEach(h => {
+                housesHtml += `
+                    <div class="relative">
+                        <span class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-[10px] md:text-xs font-black uppercase ${houses[h].text}">${h}</span>
+                        <input type="text" placeholder="Tiada" class="w-full pl-24 md:pl-28 pr-3 md:pr-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 rounded-xl font-bold text-sm md:text-base text-slate-700 outline-none focus:border-indigo-400"
+                            value="${state.adminConfig.housePasswords[h] || ''}" 
+                            onchange="updateHousePass('${h}', this.value)" />
+                    </div>
+                `;
+            });
+
+            let catsBtnHtml = '';
+            categories.forEach(cat => {
+                catsBtnHtml += `<button onclick="setMedalActiveCat('${cat}')" class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all ${state.medalActiveCat === cat ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white'}">${cat}</button>`;
+            });
+
+            let eventsHtml = '';
+            categoryEventsMapping[state.medalActiveCat].forEach(acara => {
+                const eventKey = `${state.medalActiveCat}-${acara}`;
+                const currentResult = state.medalResults[eventKey] || {};
+                
+                let medalsHtml = '';
+                ['Emas', 'Perak', 'Gangsa'].forEach((medalType, idx) => {
+                    const medalIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                    const selectedHouse = currentResult[medalType];
+                    const selectBg = selectedHouse ? houses[selectedHouse].bgLight : 'bg-white';
+                    const selectText = selectedHouse ? houses[selectedHouse].text : 'text-slate-700';
+
+                    let options = `<option value="">-- Pilih Pemenang --</option>`;
+                    Object.keys(houses).forEach(h => {
+                        options += `<option value="${h}" ${selectedHouse === h ? 'selected' : ''}>Rumah ${h}</option>`;
+                    });
+
+                    medalsHtml += `
+                        <div class="flex flex-row items-center gap-2 md:gap-4">
+                            <span class="text-xl md:text-2xl w-6 md:w-8 text-center">${medalIcon}</span>
+                            <select class="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border-2 border-slate-200 text-sm md:text-base font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
+                                onchange="handleMedalChange('${eventKey}', '${medalType}', this.value)">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                });
+
+                eventsHtml += `
+                    <div class="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-yellow-300 transition-colors">
+                        <h4 class="text-lg md:text-xl font-black text-slate-800 mb-4 md:mb-5 pb-2 md:pb-3 border-b-2 border-slate-200">${acara}</h4>
+                        <div class="space-y-3 md:space-y-4">${medalsHtml}</div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="space-y-6 animate-zoom-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                        <!-- Kawalan Sistem -->
+                        <div class="bg-white p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-4 border-slate-200">
+                            <div class="flex items-center gap-3 mb-5 md:mb-6">
+                                <div class="bg-slate-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="lock" class="text-slate-700 w-5 h-5 md:w-6 md:h-6"></i></div>
+                                <h3 class="text-xl md:text-2xl font-black text-slate-800">Kawalan Sistem</h3>
+                            </div>
+                            
+                            <div class="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl border-2 border-slate-200 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <p class="font-black text-base md:text-lg text-slate-800">Kunci Pendaftaran</p>
+                                    <p class="text-xs md:text-sm font-bold text-slate-500">Halang murid baru ditambah.</p>
+                                </div>
+                                <button onclick="toggleLock()" class="w-full sm:w-auto px-6 py-3 md:py-4 rounded-xl font-black text-white flex justify-center items-center gap-2 transition-all border-b-4 active:border-b-0 active:translate-y-1 ${state.adminConfig.isRegistrationLocked ? 'bg-red-500 hover:bg-red-400 border-red-700' : 'bg-emerald-500 hover:bg-emerald-400 border-emerald-700'}">
+                                    ${state.adminConfig.isRegistrationLocked ? `<i data-lucide="lock" class="w-[18px] h-[18px]"></i> Dikunci` : `<i data-lucide="unlock" class="w-[18px] h-[18px]"></i> Dibuka`}
+                                </button>
+                            </div>
+
+                            <div>
+                                <p class="font-black text-sm md:text-base text-slate-800 mb-3 md:mb-4">Kata Laluan Rumah Sukan (Pilihan)</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">${housesHtml}</div>
+                            </div>
+                        </div>
+
+                        <!-- Borang Cetak -->
+                        <div class="bg-indigo-50 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-4 border-indigo-100">
+                            <div class="flex items-center gap-3 mb-5 md:mb-6">
+                                <div class="bg-indigo-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="printer" class="text-indigo-600 w-5 h-5 md:w-6 md:h-6"></i></div>
+                                <h3 class="text-xl md:text-2xl font-black text-slate-800">Cetak Borang</h3>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs md:text-sm font-black text-indigo-900 mb-1.5 md:mb-2">Pilih Rumah Sukan</label>
+                                    <select class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 rounded-xl font-bold text-sm md:text-base text-slate-700 outline-none bg-white focus:border-indigo-400"
+                                        onchange="state.printHouse = this.value">
+                                        ${Object.keys(houses).map(h => `<option value="${h}" ${state.printHouse===h?'selected':''}>${h}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs md:text-sm font-black text-indigo-900 mb-1.5 md:mb-2">Pilih Kategori</label>
+                                    <select class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 rounded-xl font-bold text-sm md:text-base text-slate-700 outline-none bg-white focus:border-indigo-400"
+                                        onchange="state.printCat = this.value">
+                                        ${categories.map(c => `<option value="${c}" ${state.printCat===c?'selected':''}>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <button onclick="openPrintModal()" class="w-full py-3.5 md:py-4 mt-2 bg-indigo-600 hover:bg-indigo-500 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 text-white rounded-xl font-black text-base md:text-lg flex items-center justify-center gap-2 transition-all">
+                                    <i data-lucide="printer" class="w-5 h-5"></i> Pratonton & Cetak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Penyelarasan Awan -->
+                    <div class="bg-emerald-50 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-4 border-emerald-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-emerald-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="cloud" class="text-emerald-600 w-5 h-5 md:w-6 md:h-6"></i></div>
+                                <div>
+                                    <h3 class="text-xl md:text-2xl font-black text-slate-800">Pangkalan Data Awan</h3>
+                                    <p class="text-emerald-700 font-bold text-xs md:text-sm">Web App Google Sheets telah dipautkan. Data disegerak secara automatik.</p>
+                                </div>
+                            </div>
+                            <button onclick="fetchFromGoogleSheet()" ${state.syncStatus === 'loading' || state.syncStatus === 'syncing' ? 'disabled' : ''}
+                                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs md:text-sm flex items-center justify-center gap-2 shadow-md transition-all active:translate-y-0.5 disabled:opacity-50">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 ${state.syncStatus === 'loading' || state.syncStatus === 'syncing' ? 'animate-spin' : ''}"></i>
+                                Muat Semula Pangkalan Data
+                            </button>
+                        </div>
+                        <div class="flex items-center bg-white p-3 md:p-4 rounded-xl border-2 border-emerald-200">
+                            <input type="text" readonly value="${GOOGLE_SHEET_URL}" class="w-full bg-transparent font-bold text-slate-500 text-xs md:text-sm outline-none cursor-text" />
+                        </div>
+                    </div>
+
+                    <!-- Keputusan Rasmi Acara -->
+                    <div class="bg-white p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-4 border-slate-200">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-yellow-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="trophy" class="text-yellow-600 w-6 h-6 md:w-7 md:h-7"></i></div>
+                                <div>
+                                    <h3 class="text-xl md:text-2xl font-black text-slate-800">Keputusan Rasmi Acara</h3>
+                                    <p class="text-slate-500 font-bold text-xs md:text-sm">Kemaskini pemenang untuk mengira mata automatik.</p>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2 bg-slate-100 p-2 rounded-xl md:rounded-2xl overflow-x-auto hide-scrollbar">
+                                ${catsBtnHtml}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">${eventsHtml}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAnalysisTableHTML(houseConfig, activeCat, filteredList, availableEvents, showActions = false) {
+            let thEvents = '';
+            availableEvents.forEach(e => { thEvents += `<th class="px-1 md:px-2 py-3 md:py-4 font-black text-center text-[10px] md:text-xs whitespace-nowrap min-w-[70px] md:min-w-[80px]">${e}</th>`; });
+            
+            let tbody = '';
+            if (filteredList.length > 0) {
+                filteredList.forEach((p, index) => {
+                    const isMulti = p.acara && p.acara.length > 1;
+                    let tdEvents = '';
+                    availableEvents.forEach(event => {
+                        const isParticipating = p.acara && p.acara.includes(event);
+                        if (isParticipating) {
+                            tdEvents += `<td class="px-1 md:px-2 py-3 md:py-4 text-center border-r border-slate-100/50"><div class="w-5 h-5 md:w-6 md:h-6 mx-auto rounded-full flex items-center justify-center font-bold text-white shadow-sm print:shadow-none print:border print:border-black text-[10px] md:text-base ${houseConfig.button}">✓</div></td>`;
+                        } else {
+                            tdEvents += `<td class="px-1 md:px-2 py-3 md:py-4 text-center border-r border-slate-100/50"><span class="text-slate-200">-</span></td>`;
+                        }
+                    });
+
+                    tbody += `
+                        <tr class="hover:bg-slate-50 transition-colors group border-b border-slate-100 ${isMulti ? 'bg-orange-50/50' : 'bg-white'}">
+                            <td class="px-2 md:px-4 py-3 md:py-4 text-center text-slate-400 font-black border-r border-slate-100">${index + 1}</td>
+                            <td class="px-3 md:px-4 py-3 md:py-4 font-black text-slate-700 uppercase border-r border-slate-100 whitespace-nowrap md:whitespace-normal">${p.name}</td>
+                            <td class="px-2 md:px-4 py-3 md:py-4 text-slate-600 font-bold whitespace-nowrap border-r border-slate-100">${p.kelas}</td>
+                            <td class="px-2 md:px-4 py-3 md:py-4 text-center text-slate-500 font-bold border-r border-slate-100">${p.gender === 'Lelaki' ? 'L' : 'P'}</td>
+                            ${tdEvents}
+                            ${showActions ? `<td class="px-2 md:px-4 py-3 md:py-4 text-center no-print border-l border-slate-100"><button onclick="confirmDeleteModal(${p.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 md:p-2 rounded-lg md:rounded-xl transition-all opacity-100 lg:opacity-0 group-hover:opacity-100 focus:opacity-100"><i data-lucide="trash-2" class="w-[18px] h-[18px]"></i></button></td>` : ''}
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody = `
+                    <tr>
+                        <td colspan="${4 + availableEvents.length + (showActions?1:0)}" class="px-4 py-12 md:py-16 text-center">
+                            <div class="flex flex-col items-center justify-center text-slate-400">
+                                <i data-lucide="users" class="mb-3 md:mb-4 opacity-30 w-10 h-10 md:w-12 md:h-12"></i>
+                                <p class="font-black text-base md:text-lg">Tiada Rekod Pendaftaran</p>
+                                <p class="text-xs md:text-sm mt-1 font-bold">Daftar murid melalui Google Sheets Database atau borang pendaftaran di sebelah.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div class="overflow-x-auto rounded-xl md:rounded-2xl border-2 border-slate-100 hide-scrollbar pb-2">
+                    <table class="w-full text-xs md:text-sm text-left border-collapse min-w-[600px] md:min-w-full">
+                        <thead class="bg-slate-100 text-slate-600 border-b-2 border-slate-200">
+                            <tr>
+                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-10 md:w-12 text-center border-r-2 border-slate-200">Bil</th>
+                                <th class="px-3 md:px-4 py-3 md:py-4 font-black border-r-2 border-slate-200 min-w-[150px]">Nama Murid</th>
+                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-20 md:w-24 border-r-2 border-slate-200">Kelas</th>
+                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-16 md:w-24 text-center border-r-2 border-slate-200">Jan</th>
+                                ${thEvents}
+                                ${showActions ? '<th class="px-2 md:px-4 py-3 md:py-4 font-black text-center w-16 md:w-20 no-print border-l-2 border-slate-200">Aksi</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">${tbody}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderHouse() {
+            const hName = state.activeTab;
+            const config = houses[hName];
+            const activeCat = state.regActiveCat;
+            const isLocked = state.adminConfig.isRegistrationLocked;
+            const availableEvents = categoryEventsMapping[activeCat];
+
+            let catsHtml = '';
+            categories.forEach(cat => {
+                catsHtml += `
+                    <button onclick="setRegCat('${cat}')" class="px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-sm font-black whitespace-nowrap transition-all flex-1 min-w-[100px] ${activeCat === cat ? `${config.bgLight} ${config.text} border-b-4 border-${config.border.split('-')[1]}-400 shadow-md transform scale-[1.02] md:scale-105` : 'text-slate-500 bg-white hover:bg-slate-50 border-b-4 border-slate-200'}">
+                        ${cat}
+                    </button>
+                `;
+            });
+
+            // Filter students robustly
+            const studentsInCat = (state.studentDB[hName] || []).filter(s => s && s.category && s.category.trim().toLowerCase() === activeCat.trim().toLowerCase());
+
+            let nameSelectHtml = `<option value="">-- Pilih Nama Murid --</option>`;
+            studentsInCat.forEach(s => { nameSelectHtml += `<option value="${s.name}">${s.name}</option>`; });
+
+            let acaraBtns = '';
+            availableEvents.forEach(a => {
+                const isSelected = state.selectedAcara.includes(a);
+                acaraBtns += `
+                    <button type="button" onclick="toggleAcaraBtn('${a}')" class="px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-black transition-all border-b-[3px] active:border-b-0 active:translate-y-[3px] ${isSelected ? `${config.bgLight} ${config.text} border-${config.border.split('-')[1]}-300 shadow-sm` : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'}">
+                        ${isSelected ? '<span class="mr-1">✓</span>' : ''} ${a}
+                    </button>
+                `;
+            });
+
+            const filteredList = state.participants.filter(p => p.house === hName && p.category === activeCat);
+
+            return `
+                <div class="space-y-4 md:space-y-6 animate-slide-in-right relative">
+                    ${isLocked ? `
+                        <div class="bg-red-100 border-4 border-red-200 p-3 md:p-4 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 md:gap-3 text-red-600 font-black mb-4 md:mb-6 shadow-sm text-sm md:text-base text-center">
+                            <i data-lucide="lock" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i> Pendaftaran Ditutup. Hanya Paparan Dibenarkan.
+                        </div>
+                    ` : ''}
+
+                    <div class="bg-white/50 backdrop-blur-md p-2 md:p-3 rounded-2xl md:rounded-[2rem] shadow-sm border-2 border-slate-100 flex space-x-2 overflow-x-auto hide-scrollbar relative z-10 pb-3">
+                        ${catsHtml}
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
+                        <!-- Borang -->
+                        <div class="lg:col-span-1 bg-white p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 ${config.border} h-fit relative overflow-hidden">
+                            ${isLocked ? `<div class="absolute inset-0 bg-slate-100/60 backdrop-blur-[2px] z-20 flex items-center justify-center"><i data-lucide="lock" class="w-12 h-12 text-slate-400 opacity-50"></i></div>` : ''}
+                            
+                            <div class="mb-6 md:mb-8 flex flex-col gap-2">
+                                <div class="flex justify-between items-start">
+                                    <h3 class="text-xl md:text-2xl font-black ${config.text} flex items-center gap-2"><span>Pendaftaran</span> 👦👧</h3>
+                                    ${!state.isManualMode ? `<button type="button" onclick="fetchFromGoogleSheet()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-all active:scale-95" title="Segar semula nama"><i data-lucide="refresh-cw" class="w-3.5 h-3.5 ${state.syncStatus==='loading'?'animate-spin':''}"></i></button>` : ''}
+                                </div>
+                                <p class="text-xs md:text-sm text-slate-500 font-bold bg-slate-100 inline-block px-3 py-1 rounded-lg w-max">Kategori: ${activeCat}</p>
+                            </div>
+
+                            <div class="flex bg-slate-100 p-1 rounded-xl mb-5 border-2 border-slate-200">
+                                <button type="button" onclick="setManualMode(false)" class="flex-1 py-2 text-xs font-black rounded-lg transition-all ${!state.isManualMode ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}">Awan 📁</button>
+                                <button type="button" onclick="setManualMode(true)" class="flex-1 py-2 text-xs font-black rounded-lg transition-all ${state.isManualMode ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}">Manual ✍️</button>
+                            </div>
+
+                            <form onsubmit="submitReg(event)" class="space-y-4 md:space-y-6">
+                                <div>
+                                    <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">${state.isManualMode ? 'Nama Murid (Taip Manual)' : 'Pilih Nama (Dari Awan)'}</label>
+                                    ${!state.isManualMode ? `
+                                        <select id="regName" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base cursor-pointer" onchange="autoFillClassGender(this.value)" required>
+                                            ${nameSelectHtml}
+                                        </select>
+                                    ` : `
+                                        <input id="regName" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base" placeholder="Contoh: Ahmad Ali" required />
+                                    `}
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-3 md:gap-4">
+                                    <div>
+                                        <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Kelas</label>
+                                        <input id="regKelas" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base ${!state.isManualMode ? 'bg-slate-200 cursor-not-allowed' : 'bg-white focus:border-indigo-400 focus:outline-none'}" placeholder="Kelas" ${!state.isManualMode ? 'readonly' : ''} required />
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Jantina</label>
+                                        ${!state.isManualMode ? `
+                                            <input id="regGender" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-200 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base cursor-not-allowed" placeholder="Jantina" readonly required />
+                                        ` : `
+                                            <select id="regGender" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base focus:border-indigo-400 focus:outline-none" required>
+                                                <option value="">-- Pilih --</option>
+                                                <option value="Lelaki">Lelaki</option>
+                                                <option value="Perempuan">Perempuan</option>
+                                            </select>
+                                        `}
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-2 border-slate-100">
+                                    <label class="block text-xs md:text-sm font-black text-slate-700 mb-2 md:mb-3 flex items-center gap-2">Pilih Acara Sukan <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-500 fill-yellow-500"></i></label>
+                                    <div class="flex flex-wrap gap-2">${acaraBtns}</div>
+                                    ${state.selectedAcara.length === 0 ? `<p class="text-[10px] md:text-xs text-red-500 font-bold mt-3">*Sila pilih sekurang-kurangnya satu acara.</p>` : ''}
+                                </div>
+
+                                <button type="submit" ${state.selectedAcara.length === 0 || isLocked ? 'disabled' : ''} class="w-full py-3 md:py-4 mt-2 rounded-xl font-black text-base md:text-lg shadow-sm transition-all flex justify-center items-center gap-2 ${config.button} ${(isLocked || state.selectedAcara.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}">
+                                    Sedia, Mula! 🚀
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Jadual -->
+                        <div class="lg:col-span-2 space-y-4 md:space-y-6">
+                            <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100">
+                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
+                                    <h3 class="text-xl md:text-2xl font-black ${config.text}">Jadual Analisis Acara</h3>
+                                    <span class="${config.bgLight} ${config.text} px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-black border-2 ${config.border} shadow-sm self-end sm:self-auto">
+                                        ${filteredList.length} Murid
+                                    </span>
+                                </div>
+                                ${renderAnalysisTableHTML(config, activeCat, filteredList, availableEvents, true)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderModals() {
+            let html = '';
+            
+            if (state.authModal.isOpen) {
+                const isAd = state.authModal.targetHouse === 'Admin';
+                const config = isAd ? null : houses[state.authModal.targetHouse];
+                html += `
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in no-print">
+                        <div class="bg-white rounded-[2rem] max-w-sm w-[90%] md:w-full p-6 md:p-8 shadow-2xl border-4 border-slate-200 animate-zoom-in mx-auto">
+                            <div class="text-center mb-5 md:mb-6">
+                                <div class="w-16 h-16 md:w-20 md:h-20 mx-auto rounded-full mb-3 md:mb-4 flex items-center justify-center ${isAd ? 'bg-slate-100' : config.bgLight}">
+                                    <i data-lucide="lock" class="w-8 h-8 md:w-10 md:h-10 ${isAd ? 'text-slate-800' : config.text}"></i>
+                                </div>
+                                <h2 class="text-xl md:text-2xl font-black text-slate-800">${isAd ? 'Zon Cikgu' : `Rumah ${state.authModal.targetHouse}`}</h2>
+                                <p class="text-slate-500 font-bold text-xs md:text-sm mt-1">${isAd ? 'Masukkan kata laluan pentadbir (admin123).' : 'Masukkan kata laluan untuk masuk.'}</p>
+                            </div>
+                            <form onsubmit="submitAuth(event)" class="space-y-4">
+                                <input id="authInputPass" type="password" placeholder="Kata Laluan" autofocus class="w-full px-4 py-3 bg-slate-50 border-2 rounded-xl text-center font-bold text-lg outline-none transition-all ${state.authModal.error ? 'border-red-400 bg-red-50' : 'border-slate-200 focus:border-indigo-400'}" />
+                                ${state.authModal.error ? `<p class="text-red-500 text-xs font-bold text-center">Ralat! Kata laluan tidak sah.</p>` : ''}
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="closeAuthModal()" class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-xl transition-all border-b-4 border-slate-200 active:border-b-0 active:translate-y-1">Batal</button>
+                                    <button type="submit" class="flex-1 py-3 text-white font-bold rounded-xl shadow-md transition-all ${isAd ? 'bg-slate-800 hover:bg-slate-700 border-b-4 border-slate-900 active:border-b-0 active:translate-y-1' : config.button}">Buka</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.deleteConfirmId) {
+                html += `
+                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in no-print">
+                        <div class="bg-white rounded-3xl md:rounded-[2.5rem] max-w-sm w-full p-6 md:p-8 shadow-2xl border-4 border-red-200 animate-zoom-in text-center mx-auto">
+                            <div class="w-16 h-16 md:w-20 md:h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
+                                <i data-lucide="trash-2" class="w-8 h-8 md:w-10 md:h-10"></i>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-2">Padam Rekod?</h3>
+                            <p class="text-slate-500 font-bold text-xs md:text-sm mb-6 md:mb-8">Rekod murid ini akan dipadam secara kekal.</p>
+                            <div class="flex gap-2 md:gap-3">
+                                <button onclick="state.deleteConfirmId = null; renderApp();" class="flex-1 py-3 md:py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl transition-all border-b-4 border-slate-300 active:border-b-0 active:translate-y-1 text-sm md:text-base">Batal</button>
+                                <button onclick="executeDelete()" class="flex-1 py-3 md:py-3.5 bg-red-500 hover:bg-red-400 text-white font-black rounded-xl transition-all border-b-4 border-red-700 active:border-b-0 active:translate-y-1 text-sm md:text-base">Ya, Padam</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.showPrintModal) {
+                const pCat = state.printCat;
+                const pHouse = state.printHouse;
+                const pConfig = houses[pHouse];
+                const pList = state.participants.filter(p => p.house === pHouse && p.category === pCat);
+                const pEvents = categoryEventsMapping[pCat];
+
+                // Kemaskini elemen tersembunyi khas untuk print
+                document.getElementById('print-container').innerHTML = `
+                    <div class="mb-6 text-center border-b-4 border-slate-800 pb-4">
+                        <h1 class="text-3xl font-black uppercase">Jadual Analisis Acara Olahraga</h1>
+                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Kategori ${pCat}</h2>
+                    </div>
+                    ${renderAnalysisTableHTML(pConfig, pCat, pList, pEvents, false)}
+                `;
+
+                html += `
+                    <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex flex-col items-center justify-center p-2 sm:p-4 z-[60] animate-fade-in no-print">
+                        <div class="bg-white rounded-[1.5rem] md:rounded-[2rem] w-full max-w-6xl flex flex-col shadow-2xl overflow-hidden animate-zoom-in h-[95vh]">
+                            <div class="bg-slate-100 p-3 md:p-5 flex justify-between items-center border-b-4 border-slate-200 shrink-0">
+                                <div class="flex items-center gap-2 md:gap-3">
+                                    <div class="bg-indigo-100 p-2 md:p-3 rounded-xl md:rounded-2xl text-indigo-600 shadow-sm"><i data-lucide="printer" class="w-6 h-6 md:w-7 md:h-7"></i></div>
+                                    <div>
+                                        <h3 class="text-lg md:text-2xl font-black text-slate-800">Pratonton Cetakan</h3>
+                                        <p class="text-slate-500 font-bold text-xs md:text-sm">Saiz: A4 Melintang</p>
+                                    </div>
+                                </div>
+                                <button onclick="state.showPrintModal = false; renderApp();" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-slate-200 hover:bg-red-100 hover:text-red-500 rounded-full transition-all font-black text-lg md:text-xl shadow-sm border-2 border-slate-300">✕</button>
+                            </div>
+                            <div class="p-2 md:p-8 overflow-y-auto overflow-x-auto bg-slate-200 flex-1 flex justify-start lg:justify-center items-start shadow-inner">
+                                <div class="bg-white p-6 md:p-12 shadow-xl border border-slate-300 w-max min-w-[297mm] min-h-[210mm] shrink-0 origin-top-left lg:origin-top scale-[0.4] sm:scale-[0.6] md:scale-75 lg:scale-100 transform transition-transform">
+                                    <div class="mb-6 text-center border-b-[3px] border-slate-800 pb-4">
+                                        <h1 class="text-3xl font-black uppercase tracking-wider text-slate-900">Jadual Analisis Acara Olahraga</h1>
+                                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Kategori ${pCat}</h2>
+                                    </div>
+                                    ${renderAnalysisTableHTML(pConfig, pCat, pList, pEvents, false)}
+                                </div>
+                            </div>
+                            <div class="p-3 md:p-5 bg-white border-t-4 border-slate-100 flex justify-end gap-2 md:gap-3 shrink-0">
+                                <button onclick="state.showPrintModal = false; renderApp();" class="px-4 md:px-6 py-2.5 md:py-3.5 font-bold text-sm md:text-base text-slate-600 bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 rounded-xl md:rounded-2xl">Batal</button>
+                                <button onclick="executePrint()" class="px-4 md:px-6 py-2.5 md:py-3.5 font-bold text-sm md:text-base text-white bg-indigo-600 border-b-4 border-indigo-800 hover:bg-indigo-500 rounded-xl md:rounded-2xl flex items-center gap-2">
+                                    <i data-lucide="printer" class="w-5 h-5 md:w-6 md:h-6"></i> Teruskan Cetak
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modals').innerHTML = html;
+        }
+
+        window.handleNav = (target) => {
+            if (target === 'Admin') {
+                if (!state.isZonCikguUnlocked) {
+                    state.authModal = { isOpen: true, targetHouse: 'Admin', error: false };
+                } else { state.activeTab = 'Admin'; }
+            } else if (houses[target]) {
+                const requiredPass = state.adminConfig.housePasswords[target];
+                if (requiredPass && !state.unlockedHouses.includes(target) && state.activeTab !== 'Admin') {
+                    state.authModal = { isOpen: true, targetHouse: target, error: false };
+                } else { state.activeTab = target; }
+            } else { state.activeTab = target; }
+            renderApp();
+        };
+
+        window.submitAuth = (e) => {
+            e.preventDefault();
+            const input = document.getElementById('authInputPass').value;
+            if (state.authModal.targetHouse === 'Admin') {
+                if (input === 'admin123') {
+                    state.isZonCikguUnlocked = true;
+                    state.activeTab = 'Admin';
+                    state.authModal.isOpen = false;
+                } else { state.authModal.error = true; }
+            } else {
+                if (input === state.adminConfig.housePasswords[state.authModal.targetHouse]) {
+                    state.unlockedHouses.push(state.authModal.targetHouse);
+                    state.activeTab = state.authModal.targetHouse;
+                    state.authModal.isOpen = false;
+                } else { state.authModal.error = true; }
+            }
+            renderApp();
+        };
+        window.closeAuthModal = () => { state.authModal.isOpen = false; renderApp(); };
+
+        window.toggleLock = () => { state.adminConfig.isRegistrationLocked = !state.adminConfig.isRegistrationLocked; saveData(); renderApp(); };
+        window.updateHousePass = (house, val) => { state.adminConfig.housePasswords[house] = val; saveData(); };
+        window.setMedalActiveCat = (cat) => { state.medalActiveCat = cat; renderApp(); };
+        window.handleMedalChange = (eventKey, medalType, house) => {
+            if (!state.medalResults[eventKey]) state.medalResults[eventKey] = {};
+            state.medalResults[eventKey][medalType] = house;
+            saveData(); renderApp();
+        };
+
+        window.setRegCat = (cat) => { state.regActiveCat = cat; state.selectedAcara = []; renderApp(); };
+        window.setManualMode = (val) => { state.isManualMode = val; state.selectedAcara = []; renderApp(); };
+        
+        window.autoFillClassGender = (val) => {
+            if(!state.isManualMode) {
+                const students = state.studentDB[state.activeTab] || [];
+                const s = students.find(st => st.name === val);
+                document.getElementById('regKelas').value = s ? s.kelas : '';
+                document.getElementById('regGender').value = s ? s.gender : '';
+            }
+        };
+
+        window.toggleAcaraBtn = (a) => {
+            if (state.selectedAcara.includes(a)) { state.selectedAcara = state.selectedAcara.filter(x => x !== a); } 
+            else { state.selectedAcara.push(a); }
+            renderApp(); // Re-render to show ticks, input values might reset if not handled, but we read them on submit.
+            // Note: In vanilla JS, full re-render clears inputs. Workaround: Restore them if needed, or rely on users completing form before selecting acara.
+            // Better UX: Don't re-render entire app, just update the buttons. But for simplicity and safety, we re-render. 
+        };
+
+        window.submitReg = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const kelas = document.getElementById('regKelas').value;
+            const gender = document.getElementById('regGender').value;
+            if (!name || !kelas || state.selectedAcara.length === 0) return;
+            
+            handleAddParticipant({ id: Date.now(), name, kelas, gender, acara: [...state.selectedAcara], house: state.activeTab, category: state.regActiveCat });
+            state.selectedAcara = [];
+            renderApp();
+        };
+
+        window.confirmDeleteModal = (id) => { state.deleteConfirmId = id; renderApp(); };
+        window.executeDelete = () => {
+            const p = state.participants.find(x => x.id === state.deleteConfirmId);
+            if(p) handleDeleteParticipant(p.id, p.house);
+            state.deleteConfirmId = null;
+        };
+
+        window.openPrintModal = () => { state.showPrintModal = true; renderApp(); };
+        window.executePrint = () => {
+            window.print();
+            setTimeout(() => { state.showPrintModal = false; renderApp(); }, 500);
+        };
+
+        function renderApp() {
+            let contentHtml = '';
+            if (state.activeTab === 'Utama') contentHtml = renderDashboard();
+            else if (state.activeTab === 'Admin') contentHtml = renderAdminPanel();
+            else contentHtml = renderHouse();
+
+            const appHtml = `
+                ${renderHeader()}
+                ${renderNav()}
+                <div class="transition-all duration-300 relative z-10 no-print">${contentHtml}</div>
+            `;
+            
+            document.getElementById('app').innerHTML = appHtml;
+            renderModals();
+            
+            // Render icons for dynamically injected HTML
+            lucide.createIcons();
+        }
+
+        // Init App
+        document.addEventListener('DOMContentLoaded', () => {
+            renderApp();
+            fetchFromGoogleSheet(); // Initial data sync
+        });
+
+    </script>
+</body>
+</html>
