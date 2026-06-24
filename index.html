@@ -68,22 +68,67 @@
 
     <!-- LOGIC APPLICATION -->
     <script>
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx0cXklZDPngj9WQa0Vkg29AI_v1cypmPKyMS8gSE8RegbR-e6Y9hh0LGMC4BPjVxyI/exec";
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwHt5bzkczpk5BseNCF-mkmt6i7j4Seto6fTth5uH0_S89IXzkb-PheKPx9fmRGFzSi/exec";
 
-        const categories = ['Pra Sekolah', 'Tahap 1', 'Tahap 2', 'PPKI'];
-        
-        const categoryEventsMapping = {
-            'Tahap 1': ["100m", "Lompat Jauh", "Lontar Peluru", "Sukaneka"],
-            'Tahap 2': ["100m", "Lompat Jauh", "Lontar Peluru", "Lompat Tinggi"],
-            'Pra Sekolah': ["100m", "Sukaneka"],
-            'PPKI': ["100m", "Lompat Jauh", "Lontar Peluru", "Sukaneka"]
-        };
+        // Senarai Penuh 38 Acara Rasmi Kejohanan Olahraga SK Simpang Empat 2026
+        const officialEvents = [
+            { no: "001", nama: "LOMPAT JAUH", kategori: "LELAKI THN 3" },
+            { no: "002", nama: "LOMPAT JAUH", kategori: "PEREMPUAN THN 3" },
+            { no: "003", nama: "LOMPAT JAUH", kategori: "LELAKI THN 4" },
+            { no: "004", nama: "LOMPAT JAUH", kategori: "PEREMPUAN THN 4" },
+            { no: "005", nama: "LOMPAT JAUH", kategori: "LELAKI THN 5" },
+            { no: "006", nama: "LOMPAT JAUH", kategori: "PEREMPUAN THN 5" },
+            { no: "007", nama: "LOMPAT JAUH", kategori: "LELAKI THN 6" },
+            { no: "008", nama: "LOMPAT JAUH", kategori: "PEREMPUAN THN 6" },
+            { no: "009", nama: "LOMPAT TINGGI", kategori: "LELAKI THN 4" },
+            { no: "010", nama: "LOMPAT TINGGI", kategori: "PEREMPUAN THN 4" },
+            { no: "011", nama: "LOMPAT TINGGI", kategori: "LELAKI THN 5" },
+            { no: "012", nama: "LOMPAT TINGGI", kategori: "PEREMPUAN THN 5" },
+            { no: "013", nama: "LOMPAT TINGGI", kategori: "LELAKI THN 6" },
+            { no: "014", nama: "LOMPAT TINGGI", kategori: "PEREMPUAN THN 6" },
+            { no: "015", nama: "LONTAR PELURU", kategori: "LELAKI THN 3" },
+            { no: "016", nama: "LONTAR PELURU", kategori: "PEREMPUAN THN 3" },
+            { no: "017", nama: "LONTAR PELURU", kategori: "LELAKI THN 4" },
+            { no: "018", nama: "LONTAR PELURU", kategori: "PEREMPUAN THN 4" },
+            { no: "019", nama: "LONTAR PELURU", kategori: "LELAKI THN 5" },
+            { no: "020", nama: "LONTAR PELURU", kategori: "PEREMPUAN THN 5" },
+            { no: "021", nama: "LONTAR PELURU", kategori: "LELAKI THN 6" },
+            { no: "022", nama: "LONTAR PELURU", kategori: "PEREMPUAN THN 6" },
+            { no: "023", nama: "100 METER", kategori: "LELAKI THN 1" },
+            { no: "024", nama: "100 METER", kategori: "PEREMPUAN THN 1" },
+            { no: "025", nama: "100 METER", kategori: "LELAKI THN 2" },
+            { no: "026", nama: "100 METER", kategori: "PEREMPUAN THN 2" },
+            { no: "027", nama: "100 METER", kategori: "LELAKI THN 3" },
+            { no: "028", nama: "100 METER", kategori: "PEREMPUAN THN 3" },
+            { no: "029", nama: "100 METER", kategori: "LELAKI THN 4" },
+            { no: "030", nama: "100 METER", kategori: "PEREMPUAN THN 4" },
+            { no: "031", nama: "100 METER", kategori: "LELAKI THN 5" },
+            { no: "032", nama: "100 METER", kategori: "PEREMPUAN THN 5" },
+            { no: "033", nama: "100 METER", kategori: "LELAKI THN 6" },
+            { no: "034", nama: "100 METER", kategori: "PEREMPUAN THN 6" },
+            { no: "035", nama: "LONTAR PELURU", kategori: "PPKI (TERBUKA)" },
+            { no: "036", nama: "LOMPAT JAUH", kategori: "PPKI (TERBUKA)" },
+            { no: "037", nama: "100 METER", kategori: "PPKI (TERBUKA)" },
+            { no: "038", nama: "100 METER", kategori: "PRASEKOLAH" }
+        ];
+
+        function getEventsForHouse(houseName) {
+            let list = [...officialEvents];
+            if (houseName === "PPKI") {
+                return list.filter(e => e.nama.toUpperCase() !== "LOMPAT TINGGI");
+            } else if (houseName === "Pra Sekolah") {
+                return list.filter(e => e.nama.toUpperCase() === "100 METER");
+            }
+            return list;
+        }
 
         const houses = {
             Laksamana: { tabActive: 'bg-red-500 text-white border-b-4 border-red-700', text: 'text-red-600', border: 'border-red-400', bgLight: 'bg-red-100', bgSoft: 'bg-red-50', button: 'bg-red-500 hover:bg-red-400 border-b-4 border-red-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-red-500' },
             Bendahara: { tabActive: 'bg-blue-500 text-white border-b-4 border-blue-700', text: 'text-blue-600', border: 'border-blue-400', bgLight: 'bg-blue-100', bgSoft: 'bg-blue-50', button: 'bg-blue-500 hover:bg-blue-400 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-blue-500' },
             Syahbandar: { tabActive: 'bg-yellow-400 text-yellow-900 border-b-4 border-yellow-600', text: 'text-yellow-700', border: 'border-yellow-400', bgLight: 'bg-yellow-100', bgSoft: 'bg-yellow-50', button: 'bg-yellow-400 hover:bg-yellow-300 border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1 text-yellow-900 font-black', iconColor: 'text-yellow-500' },
             Temenggung: { tabActive: 'bg-green-500 text-white border-b-4 border-green-700', text: 'text-green-600', border: 'border-green-400', bgLight: 'bg-green-100', bgSoft: 'bg-green-50', button: 'bg-green-500 hover:bg-green-400 border-b-4 border-green-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-green-500' },
+            PPKI: { tabActive: 'bg-purple-500 text-white border-b-4 border-purple-700', text: 'text-purple-600', border: 'border-purple-400', bgLight: 'bg-purple-100', bgSoft: 'bg-purple-50', button: 'bg-purple-500 hover:bg-purple-400 border-b-4 border-purple-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-purple-500' },
+            "Pra Sekolah": { tabActive: 'bg-pink-500 text-white border-b-4 border-pink-700', text: 'text-pink-600', border: 'border-pink-400', bgLight: 'bg-pink-100', bgSoft: 'bg-pink-50', button: 'bg-pink-500 hover:bg-pink-400 border-b-4 border-pink-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-pink-500' }
         };
 
         let state = {
@@ -91,7 +136,7 @@
             studentDB: JSON.parse(localStorage.getItem('olahragaStudentDB')) || {},
             activeTab: 'Utama',
             syncStatus: 'loading',
-            adminConfig: JSON.parse(localStorage.getItem('olahragaAdminConfig')) || { isRegistrationLocked: false, housePasswords: { Laksamana: '', Bendahara: '', Syahbandar: '', Temenggung: '' } },
+            adminConfig: JSON.parse(localStorage.getItem('olahragaAdminConfig')) || { isRegistrationLocked: false, housePasswords: { Laksamana: '', Bendahara: '', Syahbandar: '', Temenggung: '', PPKI: '', "Pra Sekolah": '' } },
             medalResults: JSON.parse(localStorage.getItem('olahragaMedalResults')) || {},
             unlockedHouses: [],
             isZonCikguUnlocked: false,
@@ -99,20 +144,10 @@
             // UI View States
             authModal: { isOpen: false, targetHouse: '', error: false },
             printHouse: 'Laksamana',
-            printCat: 'Tahap 2',
             showPrintModal: false,
-            medalActiveCat: categories[0],
-            deleteConfirmId: null,
-
-            // Reg Form State (persists values between re-renders to prevent typing focus loss)
-            regActiveCat: categories[1], // Default: Tahap 1
-            isManualMode: false,
-            selectedAcara: [],
-            regForm: {
-                name: '',
-                kelas: '',
-                gender: ''
-            }
+            adminFilterAcara: 'Semua', // Tapis acara di Zon Cikgu
+            houseFilterAcara: 'Semua', // Tapis acara di Tab Rumah Sukan
+            searchKeyword: '' // Carian acara
         };
 
         function saveData() {
@@ -120,24 +155,6 @@
             localStorage.setItem('olahragaStudentDB', JSON.stringify(state.studentDB));
             localStorage.setItem('olahragaAdminConfig', JSON.stringify(state.adminConfig));
             localStorage.setItem('olahragaMedalResults', JSON.stringify(state.medalResults));
-        }
-
-        // Search house database robustly (supports case-insensitive searches)
-        function getStudentsForHouse(houseName) {
-            if (!state.studentDB) return [];
-            const matchedKey = Object.keys(state.studentDB).find(
-                k => k.trim().toLowerCase() === houseName.trim().toLowerCase()
-            );
-            return matchedKey ? state.studentDB[matchedKey] : [];
-        }
-
-        // Search house database and filter by category (robust case-insensitive)
-        function getStudentsForHouseAndCategory(houseName, categoryName) {
-            const houseStudents = getStudentsForHouse(houseName);
-            return houseStudents.filter(s => {
-                if (!s || !s.name || !s.category) return false;
-                return s.category.toString().trim().toLowerCase() === categoryName.toString().trim().toLowerCase();
-            });
         }
 
         async function fetchFromGoogleSheet() {
@@ -148,6 +165,7 @@
                 const result = await response.json();
                 if (result.status === 'success') {
                     state.participants = result.data || [];
+                    
                     if (result.studentDatabase && Object.keys(result.studentDatabase).length > 0) {
                         state.studentDB = result.studentDatabase;
                     } else {
@@ -161,44 +179,6 @@
                 state.syncStatus = 'offline';
             }
             saveData();
-            renderApp();
-        }
-
-        async function handleAddParticipant(newP) {
-            state.participants.push(newP);
-            state.syncStatus = 'syncing';
-            saveData();
-            renderApp();
-            
-            try {
-                const response = await fetch(GOOGLE_SHEET_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'add', ...newP })
-                });
-                const result = await response.json();
-                state.syncStatus = result.status === 'success' ? 'online' : 'offline';
-            } catch (e) {
-                state.syncStatus = 'offline';
-            }
-            renderApp();
-        }
-
-        async function handleDeleteParticipant(id, house) {
-            state.participants = state.participants.filter(p => p.id !== id);
-            state.syncStatus = 'syncing';
-            saveData();
-            renderApp();
-
-            try {
-                const response = await fetch(GOOGLE_SHEET_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'delete', id, house })
-                });
-                const result = await response.json();
-                state.syncStatus = result.status === 'success' ? 'online' : 'offline';
-            } catch(e) {
-                state.syncStatus = 'offline';
-            }
             renderApp();
         }
 
@@ -228,7 +208,7 @@
                         <h1 class="text-2xl sm:text-3xl md:text-5xl font-black tracking-tight text-slate-800 drop-shadow-sm leading-tight">
                             Sistem Sukan <br class="block sm:hidden" /><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Sekolahku!</span> 🏃💨
                         </h1>
-                        <p class="text-slate-500 font-bold mt-2 text-sm md:text-lg">Pendaftaran Kontinjen & Papan Markah</p>
+                        <p class="text-slate-500 font-bold mt-2 text-sm md:text-lg">Analisis Kontinjen & Papan Markah Pintar</p>
                     </div>
                 </div>
             `;
@@ -265,49 +245,96 @@
         }
 
         function calculatePoints() {
-            let points = { Laksamana: 0, Bendahara: 0, Syahbandar: 0, Temenggung: 0 };
+            let points = {};
+            Object.keys(houses).forEach(h => {
+                points[h] = 0;
+            });
             Object.values(state.medalResults).forEach(eventResult => {
-                if (eventResult['Emas']) points[eventResult['Emas']] += 5;
-                if (eventResult['Perak']) points[eventResult['Perak']] += 3;
-                if (eventResult['Gangsa']) points[eventResult['Gangsa']] += 1;
+                if (eventResult['Emas'] && points[eventResult['Emas']] !== undefined) points[eventResult['Emas']] += 10;
+                if (eventResult['Perak'] && points[eventResult['Perak']] !== undefined) points[eventResult['Perak']] += 7;
+                if (eventResult['Gangsa'] && points[eventResult['Gangsa']] !== undefined) points[eventResult['Gangsa']] += 4;
             });
             return Object.keys(points).map(house => ({ name: house, score: points[house] })).sort((a, b) => b.score - a.score);
         }
 
+        function getMedalTally() {
+            let tally = {};
+            Object.keys(houses).forEach(h => {
+                tally[h] = { emas: 0, perak: 0, gangsa: 0, total: 0 };
+            });
+            Object.values(state.medalResults).forEach(res => {
+                if (res.Emas && tally[res.Emas]) { tally[res.Emas].emas++; tally[res.Emas].total++; }
+                if (res.Perak && tally[res.Perak]) { tally[res.Perak].perak++; tally[res.Perak].total++; }
+                if (res.Gangsa && tally[res.Gangsa]) { tally[res.Gangsa].gangsa++; tally[res.Gangsa].total++; }
+            });
+            return tally;
+        }
+
+        function getPointsByEventType() {
+            let pointsByType = {};
+            Object.keys(houses).forEach(h => {
+                pointsByType[h] = { "LOMPAT JAUH": 0, "LOMPAT TINGGI": 0, "LONTAR PELURU": 0, "100 METER": 0, total: 0 };
+            });
+
+            Object.entries(state.medalResults).forEach(([eventNo, res]) => {
+                const event = officialEvents.find(e => e.no === eventNo);
+                if (event) {
+                    const type = event.nama.toUpperCase();
+                    if (res.Emas && pointsByType[res.Emas] && pointsByType[res.Emas][type] !== undefined) { pointsByType[res.Emas][type] += 10; pointsByType[res.Emas].total += 10; }
+                    if (res.Perak && pointsByType[res.Perak] && pointsByType[res.Perak][type] !== undefined) { pointsByType[res.Perak][type] += 7; pointsByType[res.Perak].total += 7; }
+                    if (res.Gangsa && pointsByType[res.Gangsa] && pointsByType[res.Gangsa][type] !== undefined) { pointsByType[res.Gangsa][type] += 4; pointsByType[res.Gangsa].total += 4; }
+                }
+            });
+            return pointsByType;
+        }
+
         function renderDashboard() {
             const rankings = calculatePoints();
-            const podiumOrder = [
-                { ...rankings[1], rank: 2 },
-                { ...rankings[0], rank: 1 },
-                { ...rankings[2], rank: 3 },
-                { ...rankings[3], rank: 4 }
-            ];
+            const podiumOrder = [];
+            
+            // Susunan visual podium responsif (Ke-2 Kiri, Juara Tengah, Ke-3 Kanan, diikuti yang lain)
+            if (rankings.length > 1) podiumOrder.push({ ...rankings[1], rank: 2 });
+            if (rankings.length > 0) podiumOrder.push({ ...rankings[0], rank: 1 });
+            if (rankings.length > 2) podiumOrder.push({ ...rankings[2], rank: 3 });
+            for (let i = 3; i < rankings.length; i++) {
+                podiumOrder.push({ ...rankings[i], rank: i + 1 });
+            }
+
+            const medalTally = getMedalTally();
+            const eventTypePoints = getPointsByEventType();
 
             let html = `
                 <div class="space-y-4 md:space-y-6 animate-slide-in-bottom">
+                    <!-- Seksyen Podium Kedudukan Utama -->
                     <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100 overflow-hidden relative">
                         <h2 class="text-xl md:text-2xl font-black text-center mb-6 md:mb-8 text-slate-800 uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3">
                             <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-5 h-5 md:w-6 md:h-6"></i> Kedudukan Terkini <i data-lucide="zap" class="text-yellow-500 fill-yellow-500 w-5 h-5 md:w-6 md:h-6"></i>
                         </h2>
                         
-                        <div class="flex flex-row justify-center items-end gap-1 sm:gap-3 md:gap-4 relative min-h-[250px] md:min-h-[300px] mt-10 pt-6">
+                        <div class="flex flex-wrap justify-center items-end gap-2 sm:gap-3 md:gap-4 relative min-h-[250px] md:min-h-[300px] mt-10 pt-6">
             `;
 
             podiumOrder.forEach(r => {
                 const h = r.name;
                 const rank = r.rank;
                 const config = houses[h];
-                const rankHeight = rank === 1 ? 'h-40 md:h-56' : rank === 2 ? 'h-32 md:h-44' : rank === 3 ? 'h-24 md:h-36' : 'h-16 md:h-24';
+                
+                let rankHeight = 'h-16 md:h-24';
+                if (rank === 1) rankHeight = 'h-40 md:h-56';
+                else if (rank === 2) rankHeight = 'h-32 md:h-44';
+                else if (rank === 3) rankHeight = 'h-24 md:h-36';
+                else if (rank === 4) rankHeight = 'h-20 md:h-28';
+                
                 const medalSize = rank === 1 ? 'w-14 h-14 md:w-20 md:h-20' : rank === 2 ? 'w-10 h-10 md:w-14 md:h-14' : rank === 3 ? 'w-10 h-10 md:w-14 md:h-14' : 'w-8 h-8 md:w-10 md:h-10';
                 
                 let medalIconHtml = '';
                 if (rank === 1) medalIconHtml = `<i data-lucide="trophy" class="text-yellow-400 fill-yellow-400 drop-shadow-lg ${medalSize}"></i>`;
                 else if (rank === 2) medalIconHtml = `<i data-lucide="medal" class="text-slate-300 fill-slate-200 drop-shadow-md ${medalSize}"></i>`;
                 else if (rank === 3) medalIconHtml = `<i data-lucide="medal" class="text-amber-600 fill-amber-500 drop-shadow-md ${medalSize}"></i>`;
-                else if (rank === 4) medalIconHtml = `<i data-lucide="star" class="text-slate-200 fill-slate-100 drop-shadow-sm ${medalSize}"></i>`;
+                else medalIconHtml = `<i data-lucide="star" class="text-slate-200 fill-slate-100 drop-shadow-sm ${medalSize}"></i>`;
 
                 html += `
-                    <div class="flex flex-col items-center group flex-1 max-w-[140px] ${rank === 1 ? 'z-10' : 'z-0'}">
+                    <div class="flex flex-col items-center group flex-1 min-w-[100px] max-w-[140px] ${rank === 1 ? 'z-10' : 'z-0'}">
                         <div class="mb-2 md:mb-3 relative flex flex-col items-center justify-center">
                             ${rank === 1 ? `<div class="absolute -top-8 text-2xl md:text-3xl animate-bounce drop-shadow-md">👑</div>` : ''}
                             ${medalIconHtml}
@@ -315,10 +342,10 @@
                         <div class="w-full rounded-t-2xl md:rounded-t-3xl border-2 md:border-4 border-b-0 ${config.border} ${config.bgLight} ${rankHeight} flex flex-col justify-start pt-2 md:pt-4 items-center p-2 transition-all duration-700 ease-out transform group-hover:-translate-y-2 relative overflow-hidden shadow-inner">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
                             <div class="absolute top-0 left-0 w-full h-2 md:h-3 bg-white/50"></div>
-                            <span class="text-3xl sm:text-4xl md:text-6xl font-black ${config.text} relative z-10 drop-shadow-sm leading-none">${r.score}</span>
-                            <span class="text-[9px] md:text-xs font-black ${config.text} opacity-80 mt-1 md:mt-2">MATA</span>
+                            <span class="text-2xl sm:text-3xl md:text-5xl font-black ${config.text} relative z-10 drop-shadow-sm leading-none">${r.score}</span>
+                            <span class="text-[8px] md:text-xs font-black ${config.text} opacity-80 mt-1 md:mt-2">MATA</span>
                             <div class="mt-auto pb-1 md:pb-2 w-full flex justify-center">
-                                <span class="font-black text-[9px] sm:text-[10px] md:text-sm uppercase ${config.text} bg-white/90 border-2 ${config.border} px-1 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl relative z-10 text-center w-11/12 shadow-sm truncate">
+                                <span class="font-black text-[8px] sm:text-[9px] md:text-xs uppercase ${config.text} bg-white/90 border-2 ${config.border} px-1 md:px-2 py-1 rounded-lg md:rounded-xl relative z-10 text-center w-11/12 shadow-sm truncate" title="${h}">
                                     ${h}
                                 </span>
                             </div>
@@ -330,28 +357,266 @@
             html += `
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            `;
 
-            Object.keys(houses).forEach(h => {
-                const count = state.participants.filter(p => p.house === h).length;
-                const config = houses[h];
-                html += `
-                    <div class="${config.bgLight} p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 md:border-4 border-white shadow-lg relative overflow-hidden transform hover:scale-105 transition-transform">
-                        <div class="relative z-10">
-                            <h4 class="font-black text-xs md:text-sm uppercase tracking-wider ${config.text}">${h}</h4>
-                            <div class="flex items-end space-x-1 md:space-x-2 mt-1 md:mt-2">
-                                <p class="text-3xl md:text-5xl font-black text-slate-800 drop-shadow-md">${count}</p>
-                                <p class="text-xs md:text-sm text-slate-600 font-bold pb-1 md:pb-2">murid</p>
+                    <!-- KAWASAN ANALISIS PINAT & MATA (2-Column Grid) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                        
+                        <!-- 1. Analisis Pingat Rumah Sukan -->
+                        <div class="bg-white p-5 md:p-8 rounded-[2rem] shadow-xl border-4 border-indigo-100 flex flex-col">
+                            <div class="flex items-center gap-3 mb-5 border-b pb-4 border-indigo-50">
+                                <div class="bg-indigo-100 p-2 md:p-3 rounded-xl"><i data-lucide="medal" class="text-indigo-600 w-5 h-5 md:w-6 md:h-6"></i></div>
+                                <div>
+                                    <h3 class="text-lg md:text-xl font-black text-slate-800">Analisis Pingat Rumah Sukan</h3>
+                                    <p class="text-xs font-bold text-slate-400">Pecahan pingat rasmi mengikut kontinjen</p>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto rounded-xl border border-slate-100 hide-scrollbar flex-1">
+                                <table class="w-full text-xs md:text-sm text-left border-collapse">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-3 font-black">Rumah Sukan</th>
+                                            <th class="px-4 py-3 font-black text-center">🥇 Emas</th>
+                                            <th class="px-4 py-3 font-black text-center">🥈 Perak</th>
+                                            <th class="px-4 py-3 font-black text-center">🥉 Gangsa</th>
+                                            <th class="px-4 py-3 font-black text-center bg-indigo-50/50 text-indigo-700">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 font-bold">
+                                        ${Object.keys(houses).map(h => {
+                                            const t = medalTally[h] || { emas: 0, perak: 0, gangsa: 0, total: 0 };
+                                            return `
+                                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                                    <td class="px-4 py-3.5 flex items-center gap-2">
+                                                        <span class="w-3.5 h-3.5 rounded-full ${houses[h].bgLight} border-2 ${houses[h].border}"></span>
+                                                        <span class="${houses[h].text} uppercase font-black">${h}</span>
+                                                    </td>
+                                                    <td class="px-4 py-3.5 text-center text-slate-700 font-black text-base">${t.emas}</td>
+                                                    <td class="px-4 py-3.5 text-center text-slate-700 font-black text-base">${t.perak}</td>
+                                                    <td class="px-4 py-3.5 text-center text-slate-700 font-black text-base">${t.gangsa}</td>
+                                                    <td class="px-4 py-3.5 text-center bg-indigo-50/20 text-indigo-600 font-black text-lg">${t.total}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <i data-lucide="activity" class="absolute -bottom-2 -right-2 md:-bottom-4 md:-right-4 w-20 h-20 md:w-32 md:h-32 opacity-20 ${config.text}"></i>
+
+                        <!-- 2. Analisis Mata Mengikut Jenis Acara -->
+                        <div class="bg-white p-5 md:p-8 rounded-[2rem] shadow-xl border-4 border-emerald-100 flex flex-col">
+                            <div class="flex items-center gap-3 mb-5 border-b pb-4 border-emerald-50">
+                                <div class="bg-emerald-100 p-2 md:p-3 rounded-xl"><i data-lucide="bar-chart-2" class="text-emerald-600 w-5 h-5 md:w-6 md:h-6"></i></div>
+                                <div>
+                                    <h3 class="text-lg md:text-xl font-black text-slate-800">Analisis Mata Rumah Sukan</h3>
+                                    <p class="text-xs font-bold text-slate-400">Pecahan mata mengikut jenis acara (Emas: 10m, Perak: 7m, Gangsa: 4m)</p>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto rounded-xl border border-slate-100 hide-scrollbar flex-1">
+                                <table class="w-full text-xs md:text-sm text-left border-collapse">
+                                    <thead class="bg-slate-50 text-slate-600 border-b border-slate-100">
+                                        <tr>
+                                            <th class="px-4 py-3 font-black">Rumah Sukan</th>
+                                            <th class="px-3 py-3 font-black text-center">100M</th>
+                                            <th class="px-3 py-3 font-black text-center">L. JAUH</th>
+                                            <th class="px-3 py-3 font-black text-center">L. TINGGI</th>
+                                            <th class="px-3 py-3 font-black text-center">L. PELURU</th>
+                                            <th class="px-4 py-3 font-black text-center bg-emerald-50/50 text-emerald-700">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 font-bold">
+                                        ${Object.keys(houses).map(h => {
+                                            const p = eventTypePoints[h] || { "LOMPAT JAUH": 0, "LOMPAT TINGGI": 0, "LONTAR PELURU": 0, "100 METER": 0, total: 0 };
+                                            return `
+                                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                                    <td class="px-4 py-3.5 flex items-center gap-2">
+                                                        <span class="w-3.5 h-3.5 rounded-full ${houses[h].bgLight} border-2 ${houses[h].border}"></span>
+                                                        <span class="${houses[h].text} uppercase font-black">${h}</span>
+                                                    </td>
+                                                    <td class="px-3 py-3.5 text-center text-slate-700 font-extrabold">${p["100 METER"]}</td>
+                                                    <td class="px-3 py-3.5 text-center text-slate-700 font-extrabold">${p["LOMPAT JAUH"]}</td>
+                                                    <td class="px-3 py-3.5 text-center text-slate-700 font-extrabold">${p["LOMPAT TINGGI"]}</td>
+                                                    <td class="px-3 py-3.5 text-center text-slate-700 font-extrabold">${p["LONTAR PELURU"]}</td>
+                                                    <td class="px-4 py-3.5 text-center bg-emerald-50/20 text-emerald-600 font-black text-lg">${p.total}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
+                </div>
+            `;
+            return html;
+        }
+
+        function renderAnalysisTableHTML(houseConfig, houseName, filteredEventsList) {
+            let tbody = '';
+            
+            // Tapis hanya acara yang dimenangi pingat oleh rumah sukan ini
+            const medalEvents = filteredEventsList.filter(event => {
+                const currentResult = state.medalResults[event.no] || {};
+                return currentResult.Emas === houseName || 
+                       currentResult.Perak === houseName || 
+                       currentResult.Gangsa === houseName;
+            });
+            
+            if (medalEvents.length > 0) {
+                medalEvents.forEach((event) => {
+                    const currentResult = state.medalResults[event.no] || {};
+                    
+                    let medalBadge = '-';
+                    if (currentResult.Emas === houseName) {
+                        const pName = currentResult['EmasNama'] ? ` - ${currentResult['EmasNama']}` : '';
+                        medalBadge = `<span class="bg-yellow-100 text-yellow-700 text-xs font-black px-2.5 py-1 rounded-md border border-yellow-300">🥇 EMAS${pName}</span>`;
+                    } else if (currentResult.Perak === houseName) {
+                        const pName = currentResult['PerakNama'] ? ` - ${currentResult['PerakNama']}` : '';
+                        medalBadge = `<span class="bg-slate-100 text-slate-700 text-xs font-black px-2.5 py-1 rounded-md border border-slate-300">🥈 PERAK${pName}</span>`;
+                    } else if (currentResult.Gangsa === houseName) {
+                        const pName = currentResult['GangsaNama'] ? ` - ${currentResult['GangsaNama']}` : '';
+                        medalBadge = `<span class="bg-orange-100 text-orange-700 text-xs font-black px-2.5 py-1 rounded-md border border-orange-300">🥉 GANGSA${pName}</span>`;
+                    }
+
+                    tbody += `
+                        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                            <td class="px-4 py-4 text-center text-slate-500 font-black border-r border-slate-100">${event.no}</td>
+                            <td class="px-4 py-4 font-black text-slate-700 border-r border-slate-100 whitespace-nowrap">${event.nama}</td>
+                            <td class="px-4 py-4 text-slate-600 font-extrabold border-r border-slate-100 whitespace-nowrap text-xs">${event.kategori}</td>
+                            <td class="px-4 py-4 text-center font-black">${medalBadge}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody = `
+                    <tr>
+                        <td colSpan="4" class="px-4 py-12 text-center text-slate-400 font-bold">
+                            <i data-lucide="award" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+                            Tiada Kutipan Pingat Tercatat
+                        </td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                    <table class="w-full text-xs md:text-sm text-left border-collapse">
+                        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3 font-black text-center w-20 border-r border-slate-100">No Acara</th>
+                                <th class="px-4 py-3 font-black border-r border-slate-100">Nama Acara</th>
+                                <th class="px-4 py-3 font-black border-r border-slate-100">Kategori</th>
+                                <th class="px-4 py-3 font-black text-center">Pencapaian Pingat</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${tbody}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderHouse(hName) {
+            const config = houses[hName];
+            
+            // Sediakan penapis mengikut jenis acara yang sah untuk rumah sukan ini
+            let categoriesForHouse = ['Semua'];
+            if (hName === 'PPKI') {
+                categoriesForHouse = ['Semua', 'LOMPAT JAUH', 'LONTAR PELURU', '100 METER'];
+            } else if (hName === 'Pra Sekolah') {
+                categoriesForHouse = ['Semua', '100 METER'];
+            } else {
+                categoriesForHouse = ['Semua', 'LOMPAT JAUH', 'LOMPAT TINGGI', 'LONTAR PELURU', '100 METER'];
+            }
+
+            let catsHtml = '';
+            categoriesForHouse.forEach(cat => {
+                const label = cat === 'Semua' ? 'Semua Acara' : cat;
+                catsHtml += `
+                    <button onclick="setHouseFilterAcara('${cat}')" class="px-4 py-2.5 md:px-5 md:py-3 rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all
+                        ${state.houseFilterAcara === cat 
+                            ? `${config.bgLight} ${config.text} border-b-4 border-${config.border.split('-')[1]}-400 shadow-md transform scale-[1.02]` 
+                            : 'text-slate-500 bg-white hover:bg-slate-50 border-b-4 border-slate-200'
+                        }
+                    ">
+                        ${label}
+                    </button>
                 `;
             });
 
-            html += `</div></div>`;
-            return html;
+            let filteredEventsHouse = getEventsForHouse(hName);
+            if (state.houseFilterAcara !== 'Semua') {
+                filteredEventsHouse = filteredEventsHouse.filter(e => e.nama.toUpperCase() === state.houseFilterAcara.toUpperCase());
+            }
+
+            if (state.searchKeyword) {
+                const kw = state.searchKeyword.toLowerCase();
+                filteredEventsHouse = filteredEventsHouse.filter(e => e.no.includes(kw) || e.nama.toLowerCase().includes(kw) || e.kategori.toLowerCase().includes(kw));
+            }
+
+            // Dapatkan pecahan ringkasan pingat kontinjen
+            const tally = getMedalTally()[hName] || { emas: 0, perak: 0, gangsa: 0, total: 0 };
+
+            return `
+                <div class="space-y-4 md:space-y-6 animate-slide-in-right relative">
+                    <!-- Info Kontinjen & Ringkasan Pingat -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="${config.bgLight} p-5 rounded-3xl border-4 ${config.border} flex flex-col justify-center">
+                            <h4 class="font-black text-xs md:text-sm uppercase tracking-wider ${config.text}">Kontinjen Rumah</h4>
+                            <h3 class="text-2xl md:text-3xl font-black text-slate-800 uppercase mt-1">${hName}</h3>
+                        </div>
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                            <span class="text-3xl">🥇</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">Pingat Emas</p>
+                                <p class="text-2xl font-black text-slate-800">${tally.emas}</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                            <span class="text-3xl">🥈</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">Pingat Perak</p>
+                                <p class="text-2xl font-black text-slate-800">${tally.perak}</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                            <span class="text-3xl">🥉</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase">Pingat Gangsa</p>
+                                <p class="text-2xl font-black text-slate-800">${tally.gangsa}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Penapis Kategori -->
+                    <div class="bg-white/50 backdrop-blur-md p-2 md:p-3 rounded-2xl md:rounded-[2rem] shadow-sm border-2 border-slate-100 flex flex-col md:flex-row gap-2 relative z-10">
+                        <div class="flex space-x-2 overflow-x-auto hide-scrollbar pb-1 md:pb-0 flex-1">
+                            ${catsHtml}
+                        </div>
+                        <div class="relative w-full md:w-64 self-center">
+                            <input type="text" placeholder="Cari acara..." value="${state.searchKeyword}" oninput="setSearchKeyword(this.value)" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl font-bold text-xs md:text-sm outline-none focus:border-indigo-400 pl-10 bg-white" />
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        </div>
+                    </div>
+
+                    <!-- Layout Jadual Analisis Penuh -->
+                    <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100 relative z-10">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
+                            <div>
+                                <h3 class="text-xl md:text-2xl font-black ${config.text} flex items-center gap-2">
+                                    <i data-lucide="activity" class="w-6 h-6"></i> Pencapaian 38 Acara Kejohanan
+                                </h3>
+                                <p class="text-xs font-bold text-slate-400 mt-1">Hanya acara yang memperoleh pingat sahaja akan dipaparkan.</p>
+                            </div>
+                        </div>
+                        
+                        ${renderAnalysisTableHTML(config, hName, filteredEventsHouse)}
+                    </div>
+                </div>
+            `;
         }
 
         function renderAdminPanel() {
@@ -367,15 +632,27 @@
                 `;
             });
 
+            // Penapis Acara untuk Zon Cikgu
+            const categoriesAdmin = ['Semua', '100 Meter', 'Lompat Jauh', 'Lompat Tinggi', 'Lontar Peluru'];
             let catsBtnHtml = '';
-            categories.forEach(cat => {
-                catsBtnHtml += `<button onclick="setMedalActiveCat('${cat}')" class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all ${state.medalActiveCat === cat ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white'}">${cat}</button>`;
+            categoriesAdmin.forEach(cat => {
+                catsBtnHtml += `<button onclick="setAdminFilterAcara('${cat}')" class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all ${state.adminFilterAcara === cat ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white'}">${cat}</button>`;
             });
 
+            let adminEventsFilteredList = officialEvents;
+            if (state.adminFilterAcara !== 'Semua') {
+                adminEventsFilteredList = officialEvents.filter(e => e.nama.toUpperCase() === state.adminFilterAcara.toUpperCase());
+            }
+
+            if (state.searchKeyword) {
+                const kw = state.searchKeyword.toLowerCase();
+                adminEventsFilteredList = adminEventsFilteredList.filter(e => e.no.includes(kw) || e.nama.toLowerCase().includes(kw) || e.kategori.toLowerCase().includes(kw));
+            }
+
             let eventsHtml = '';
-            categoryEventsMapping[state.medalActiveCat].forEach(acara => {
-                const eventKey = `${state.medalActiveCat}-${acara}`;
-                const currentResult = state.medalResults[eventKey] || {};
+            adminEventsFilteredList.forEach(event => {
+                const currentResult = state.medalResults[event.no] || {};
+                const isSpecialEvent = ["035", "036", "037", "038"].includes(event.no);
                 
                 let medalsHtml = '';
                 ['Emas', 'Perak', 'Gangsa'].forEach((medalType, idx) => {
@@ -384,29 +661,65 @@
                     const selectBg = selectedHouse ? houses[selectedHouse].bgLight : 'bg-white';
                     const selectText = selectedHouse ? houses[selectedHouse].text : 'text-slate-700';
 
-                    let options = `<option value="">-- Pilih Pemenang --</option>`;
+                    let options = `<option value="">-- Tiada --</option>`;
                     Object.keys(houses).forEach(h => {
                         options += `<option value="${h}" ${selectedHouse === h ? 'selected' : ''}>Rumah ${h}</option>`;
                     });
 
-                    medalsHtml += `
-                        <div class="flex flex-row items-center gap-2 md:gap-4">
-                            <span class="text-xl md:text-2xl w-6 md:w-8 text-center">${medalIcon}</span>
-                            <select class="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border-2 border-slate-200 text-sm md:text-base font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
-                                onchange="handleMedalChange('${eventKey}', '${medalType}', this.value)">
-                                ${options}
-                            </select>
-                        </div>
-                    `;
+                    if (isSpecialEvent) {
+                        medalsHtml += `
+                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                <div class="flex items-center gap-1.5 min-w-[75px]">
+                                    <span class="text-lg md:text-xl w-6 text-center">${medalIcon}</span>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">${medalType}</span>
+                                </div>
+                                <div class="flex flex-1 gap-2">
+                                    <select class="w-1/3 px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
+                                        onchange="handleMedalChange('${event.no}', '${medalType}', this.value)">
+                                        ${options}
+                                    </select>
+                                    <input type="text" placeholder="Nama pemenang..." 
+                                        class="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50 text-slate-800"
+                                        value="${currentResult[medalType + 'Nama'] || ''}"
+                                        oninput="handleMedalNameChange('${event.no}', '${medalType}', this.value)" />
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        medalsHtml += `
+                            <div class="flex flex-row items-center gap-2 md:gap-4">
+                                <span class="text-xl md:text-2xl w-6 md:w-8 text-center">${medalIcon}</span>
+                                <select class="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border-2 border-slate-200 text-sm md:text-base font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
+                                    onchange="handleMedalChange('${event.no}', '${medalType}', this.value)">
+                                    ${options}
+                                </select>
+                            </div>
+                        `;
+                    }
                 });
 
                 eventsHtml += `
                     <div class="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-yellow-300 transition-colors">
-                        <h4 class="text-lg md:text-xl font-black text-slate-800 mb-4 md:mb-5 pb-2 md:pb-3 border-b-2 border-slate-200">${acara}</h4>
+                        <div class="flex items-center justify-between mb-4 pb-2 border-b-2 border-slate-200">
+                            <div>
+                                <span class="bg-indigo-600 text-white text-[10px] md:text-xs font-black px-2.5 py-1 rounded-md uppercase tracking-wider mr-2">ACARA ${event.no}</span>
+                                <h4 class="text-base md:text-lg font-black text-slate-800 inline-block mt-1">${event.nama}</h4>
+                            </div>
+                            <span class="text-xs font-black text-slate-500 bg-slate-200 px-2 py-1 rounded-md">${event.kategori}</span>
+                        </div>
                         <div class="space-y-3 md:space-y-4">${medalsHtml}</div>
                     </div>
                 `;
             });
+
+            if (adminEventsFilteredList.length === 0) {
+                eventsHtml = `
+                    <div class="col-span-1 lg:col-span-2 py-12 text-center text-slate-400 font-bold">
+                        <i data-lucide="frown" class="w-12 h-12 mx-auto mb-2 opacity-55"></i>
+                        Tiada acara ditemui untuk padanan carian "${state.searchKeyword}".
+                    </div>
+                `;
+            }
 
             return `
                 <div class="space-y-6 animate-zoom-in">
@@ -421,7 +734,7 @@
                             <div class="bg-slate-50 p-4 md:p-6 rounded-xl md:rounded-2xl border-2 border-slate-200 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                 <div>
                                     <p class="font-black text-base md:text-lg text-slate-800">Kunci Pendaftaran</p>
-                                    <p class="text-xs md:text-sm font-bold text-slate-500">Halang murid baru ditambah.</p>
+                                    <p class="text-xs md:text-sm font-bold text-slate-500">Halang penambahan rekod atau perubahan baharu.</p>
                                 </div>
                                 <button onclick="toggleLock()" class="w-full sm:w-auto px-6 py-3 md:py-4 rounded-xl font-black text-white flex justify-center items-center gap-2 transition-all border-b-4 active:border-b-0 active:translate-y-1 ${state.adminConfig.isRegistrationLocked ? 'bg-red-500 hover:bg-red-400 border-red-700' : 'bg-emerald-500 hover:bg-emerald-400 border-emerald-700'}">
                                     ${state.adminConfig.isRegistrationLocked ? `<i data-lucide="lock" class="w-[18px] h-[18px]"></i> Dikunci` : `<i data-lucide="unlock" class="w-[18px] h-[18px]"></i> Dibuka`}
@@ -449,15 +762,8 @@
                                         ${Object.keys(houses).map(h => `<option value="${h}" ${state.printHouse===h?'selected':''}>${h}</option>`).join('')}
                                     </select>
                                 </div>
-                                <div>
-                                    <label class="block text-xs md:text-sm font-black text-indigo-900 mb-1.5 md:mb-2">Pilih Kategori</label>
-                                    <select class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 rounded-xl font-bold text-sm md:text-base text-slate-700 outline-none bg-white focus:border-indigo-400"
-                                        onchange="state.printCat = this.value">
-                                        ${categories.map(c => `<option value="${c}" ${state.printCat===c?'selected':''}>${c}</option>`).join('')}
-                                    </select>
-                                </div>
                                 <button onclick="openPrintModal()" class="w-full py-3.5 md:py-4 mt-2 bg-indigo-600 hover:bg-indigo-500 border-b-4 border-indigo-800 active:border-b-0 active:translate-y-1 text-white rounded-xl font-black text-base md:text-lg flex items-center justify-center gap-2 transition-all">
-                                    <i data-lucide="printer" class="w-5 h-5"></i> Pratonton & Cetak
+                                    <i data-lucide="printer" class="w-5 h-5"></i> Pratonton & Cetak Acara
                                 </button>
                             </div>
                         </div>
@@ -470,7 +776,7 @@
                                 <div class="bg-emerald-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="cloud" class="text-emerald-600 w-5 h-5 md:w-6 md:h-6"></i></div>
                                 <div>
                                     <h3 class="text-xl md:text-2xl font-black text-slate-800">Pangkalan Data Awan</h3>
-                                    <p class="text-emerald-700 font-bold text-xs md:text-sm">Web App Google Sheets telah dipautkan. Data disegerak secara automatik.</p>
+                                    <p class="text-emerald-700 font-bold text-xs md:text-sm">Penyegerakan pendaftaran murid & jadual terus dari Google Sheets.</p>
                                 </div>
                             </div>
                             <button onclick="fetchFromGoogleSheet()" ${state.syncStatus === 'loading' || state.syncStatus === 'syncing' ? 'disabled' : ''}
@@ -484,210 +790,28 @@
                         </div>
                     </div>
 
-                    <!-- Keputusan Rasmi Acara -->
+                    <!-- Keputusan Rasmi Acara (Penyuntingan Pingat Terbuka) -->
                     <div class="bg-white p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl border-4 border-slate-200">
                         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 md:mb-8 gap-4">
                             <div class="flex items-center gap-3">
                                 <div class="bg-yellow-100 p-2 md:p-3 rounded-xl md:rounded-2xl"><i data-lucide="trophy" class="text-yellow-600 w-6 h-6 md:w-7 md:h-7"></i></div>
                                 <div>
                                     <h3 class="text-xl md:text-2xl font-black text-slate-800">Keputusan Rasmi Acara</h3>
-                                    <p class="text-slate-500 font-bold text-xs md:text-sm">Kemaskini pemenang untuk mengira mata automatik.</p>
+                                    <p class="text-slate-500 font-bold text-xs md:text-sm">Kemaskini pemenang untuk mengira mata kejohanan secara automatik.</p>
                                 </div>
                             </div>
-                            <div class="flex space-x-2 bg-slate-100 p-2 rounded-xl md:rounded-2xl overflow-x-auto hide-scrollbar">
-                                ${catsBtnHtml}
+                            
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <div class="relative">
+                                    <input type="text" placeholder="Cari acara..." value="${state.searchKeyword}" oninput="setSearchKeyword(this.value)" class="w-full sm:w-64 px-4 py-2 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-400 pl-10" />
+                                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                                </div>
+                                <div class="flex space-x-1 bg-slate-100 p-1.5 rounded-xl overflow-x-auto hide-scrollbar">
+                                    ${catsBtnHtml}
+                                </div>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">${eventsHtml}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderAnalysisTableHTML(houseConfig, activeCat, filteredList, availableEvents, showActions = false) {
-            let thEvents = '';
-            availableEvents.forEach(e => { thEvents += `<th class="px-1 md:px-2 py-3 md:py-4 font-black text-center text-[10px] md:text-xs whitespace-nowrap min-w-[70px] md:min-w-[80px]">${e}</th>`; });
-            
-            let tbody = '';
-            if (filteredList.length > 0) {
-                filteredList.forEach((p, index) => {
-                    const isMulti = p.acara && p.acara.length > 1;
-                    let tdEvents = '';
-                    availableEvents.forEach(event => {
-                        const isParticipating = p.acara && p.acara.includes(event);
-                        if (isParticipating) {
-                            tdEvents += `<td class="px-1 md:px-2 py-3 md:py-4 text-center border-r border-slate-100/50"><div class="w-5 h-5 md:w-6 md:h-6 mx-auto rounded-full flex items-center justify-center font-bold text-white shadow-sm print:shadow-none print:border print:border-black text-[10px] md:text-base ${houseConfig.button}">✓</div></td>`;
-                        } else {
-                            tdEvents += `<td class="px-1 md:px-2 py-3 md:py-4 text-center border-r border-slate-100/50"><span class="text-slate-200">-</span></td>`;
-                        }
-                    });
-
-                    tbody += `
-                        <tr class="hover:bg-slate-50 transition-colors group border-b border-slate-100 ${isMulti ? 'bg-orange-50/50' : 'bg-white'}">
-                            <td class="px-2 md:px-4 py-3 md:py-4 text-center text-slate-400 font-black border-r border-slate-100">${index + 1}</td>
-                            <td class="px-3 md:px-4 py-3 md:py-4 font-black text-slate-700 uppercase border-r border-slate-100 whitespace-nowrap md:whitespace-normal">${p.name}</td>
-                            <td class="px-2 md:px-4 py-3 md:py-4 text-slate-600 font-bold whitespace-nowrap border-r border-slate-100">${p.kelas}</td>
-                            <td class="px-2 md:px-4 py-3 md:py-4 text-center text-slate-500 font-bold border-r border-slate-100">${p.gender === 'Lelaki' ? 'L' : 'P'}</td>
-                            ${tdEvents}
-                            ${showActions ? `<td class="px-2 md:px-4 py-3 md:py-4 text-center no-print border-l border-slate-100"><button onclick="confirmDeleteModal(${p.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-1.5 md:p-2 rounded-lg md:rounded-xl transition-all opacity-100 lg:opacity-0 group-hover:opacity-100 focus:opacity-100"><i data-lucide="trash-2" class="w-[18px] h-[18px]"></i></button></td>` : ''}
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody = `
-                    <tr>
-                        <td colspan="${4 + availableEvents.length + (showActions?1:0)}" class="px-4 py-12 md:py-16 text-center">
-                            <div class="flex flex-col items-center justify-center text-slate-400">
-                                <i data-lucide="users" class="mb-3 md:mb-4 opacity-30 w-10 h-10 md:w-12 md:h-12"></i>
-                                <p class="font-black text-base md:text-lg">Tiada Rekod Pendaftaran</p>
-                                <p class="text-xs md:text-sm mt-1 font-bold">Daftar murid melalui Google Sheets Database atau borang pendaftaran di sebelah.</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
-
-            return `
-                <div class="overflow-x-auto rounded-xl md:rounded-2xl border-2 border-slate-100 hide-scrollbar pb-2">
-                    <table class="w-full text-xs md:text-sm text-left border-collapse min-w-[600px] md:min-w-full">
-                        <thead class="bg-slate-100 text-slate-600 border-b-2 border-slate-200">
-                            <tr>
-                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-10 md:w-12 text-center border-r-2 border-slate-200">Bil</th>
-                                <th class="px-3 md:px-4 py-3 md:py-4 font-black border-r-2 border-slate-200 min-w-[150px]">Nama Murid</th>
-                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-20 md:w-24 border-r-2 border-slate-200">Kelas</th>
-                                <th class="px-2 md:px-4 py-3 md:py-4 font-black w-16 md:w-24 text-center border-r-2 border-slate-200">Jan</th>
-                                ${thEvents}
-                                ${showActions ? '<th class="px-2 md:px-4 py-3 md:py-4 font-black text-center w-16 md:w-20 no-print border-l-2 border-slate-200">Aksi</th>' : ''}
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">${tbody}</tbody>
-                    </table>
-                </div>
-            `;
-        }
-
-        function renderHouse() {
-            const hName = state.activeTab;
-            const config = houses[hName];
-            const activeCat = state.regActiveCat;
-            const isLocked = state.adminConfig.isRegistrationLocked;
-            const availableEvents = categoryEventsMapping[activeCat];
-
-            let catsHtml = '';
-            categories.forEach(cat => {
-                catsHtml += `
-                    <button onclick="setRegCat('${cat}')" class="px-4 py-2.5 md:px-6 md:py-3 rounded-xl md:rounded-2xl text-xs md:text-sm font-black whitespace-nowrap transition-all flex-1 min-w-[100px] ${activeCat === cat ? `${config.bgLight} ${config.text} border-b-4 border-${config.border.split('-')[1]}-400 shadow-md transform scale-[1.02] md:scale-105` : 'text-slate-500 bg-white hover:bg-slate-50 border-b-4 border-slate-200'}">
-                        ${cat}
-                    </button>
-                `;
-            });
-
-            // Filter students using our robust search logic
-            const studentsInCat = getStudentsForHouseAndCategory(hName, activeCat);
-
-            // Populate Dropdown Options
-            let nameSelectHtml = `<option value="">-- Pilih Nama Murid --</option>`;
-            studentsInCat.forEach(s => { 
-                nameSelectHtml += `<option value="${s.name}" ${state.regForm.name === s.name ? 'selected' : ''}>${s.name}</option>`; 
-            });
-
-            let acaraBtns = '';
-            availableEvents.forEach(a => {
-                const isSelected = state.selectedAcara.includes(a);
-                acaraBtns += `
-                    <button type="button" onclick="toggleAcaraBtn('${a}')" class="px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-black transition-all border-b-[3px] active:border-b-0 active:translate-y-[3px] ${isSelected ? `${config.bgLight} ${config.text} border-${config.border.split('-')[1]}-300 shadow-sm` : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'}">
-                        ${isSelected ? '<span class="mr-1">✓</span>' : ''} ${a}
-                    </button>
-                `;
-            });
-
-            const filteredList = state.participants.filter(p => p.house === hName && p.category === activeCat);
-
-            return `
-                <div class="space-y-4 md:space-y-6 animate-slide-in-right relative">
-                    ${isLocked ? `
-                        <div class="bg-red-100 border-4 border-red-200 p-3 md:p-4 rounded-2xl md:rounded-3xl flex items-center justify-center gap-2 md:gap-3 text-red-600 font-black mb-4 md:mb-6 shadow-sm text-sm md:text-base text-center">
-                            <i data-lucide="lock" class="w-5 h-5 md:w-6 md:h-6 shrink-0"></i> Pendaftaran Ditutup. Hanya Paparan Dibenarkan.
-                        </div>
-                    ` : ''}
-
-                    <div class="bg-white/50 backdrop-blur-md p-2 md:p-3 rounded-2xl md:rounded-[2rem] shadow-sm border-2 border-slate-100 flex space-x-2 overflow-x-auto hide-scrollbar relative z-10 pb-3">
-                        ${catsHtml}
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative z-10">
-                        <!-- Borang -->
-                        <div class="lg:col-span-1 bg-white p-5 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 ${config.border} h-fit relative overflow-hidden">
-                            ${isLocked ? `<div class="absolute inset-0 bg-slate-100/60 backdrop-blur-[2px] z-20 flex items-center justify-center"><i data-lucide="lock" class="w-12 h-12 text-slate-400 opacity-50"></i></div>` : ''}
-                            
-                            <div class="mb-6 md:mb-8 flex flex-col gap-2">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="text-xl md:text-2xl font-black ${config.text} flex items-center gap-2"><span>Pendaftaran</span> 👦👧</h3>
-                                    ${!state.isManualMode ? `<button type="button" onclick="fetchFromGoogleSheet()" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-600 transition-all active:scale-95" title="Segar semula nama"><i data-lucide="refresh-cw" class="w-3.5 h-3.5 ${state.syncStatus==='loading'?'animate-spin':''}"></i></button>` : ''}
-                                </div>
-                                <p class="text-xs md:text-sm text-slate-500 font-bold bg-slate-100 inline-block px-3 py-1 rounded-lg w-max">Kategori: ${activeCat}</p>
-                            </div>
-
-                            <div class="flex bg-slate-100 p-1 rounded-xl mb-5 border-2 border-slate-200">
-                                <button type="button" onclick="setManualMode(false)" class="flex-1 py-2 text-xs font-black rounded-lg transition-all ${!state.isManualMode ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}">Awan 📁</button>
-                                <button type="button" onclick="setManualMode(true)" class="flex-1 py-2 text-xs font-black rounded-lg transition-all ${state.isManualMode ? 'bg-white text-indigo-600 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-700'}">Manual ✍️</button>
-                            </div>
-
-                            <form onsubmit="submitReg(event)" class="space-y-4 md:space-y-6">
-                                <div>
-                                    <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">${state.isManualMode ? 'Nama Murid (Taip Manual)' : 'Pilih Nama (Dari Awan)'}</label>
-                                    ${!state.isManualMode ? `
-                                        <select id="regName" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-50 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base cursor-pointer" onchange="handleNameSelect(this.value)" required>
-                                            ${nameSelectHtml}
-                                        </select>
-                                    ` : `
-                                        <input id="regName" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-400 font-bold transition-all text-sm md:text-base" placeholder="Contoh: Ahmad Ali" oninput="handleManualNameInput(this.value)" value="${state.regForm.name || ''}" required />
-                                    `}
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-3 md:gap-4">
-                                    <div>
-                                        <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Kelas</label>
-                                        <input id="regKelas" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base ${!state.isManualMode ? 'bg-slate-200 cursor-not-allowed' : 'bg-white focus:border-indigo-400 focus:outline-none'}" placeholder="Kelas" ${!state.isManualMode ? 'readonly' : 'oninput="handleKelasInput(this.value)"'} value="${state.regForm.kelas || ''}" required />
-                                    </div>
-                                    <div>
-                                        <label class="block text-xs md:text-sm font-black text-slate-700 mb-1 md:mb-2">Jantina</label>
-                                        ${!state.isManualMode ? `
-                                            <input id="regGender" type="text" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-slate-200 border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base cursor-not-allowed" placeholder="Jantina" value="${state.regForm.gender || ''}" readonly required />
-                                        ` : `
-                                            <select id="regGender" onchange="handleGenderSelect(this.value)" class="w-full px-3 md:px-4 py-2.5 md:py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold transition-all text-sm md:text-base focus:border-indigo-400 focus:outline-none" required>
-                                                <option value="">-- Pilih --</option>
-                                                <option value="Lelaki" ${state.regForm.gender === 'Lelaki' ? 'selected' : ''}>Lelaki</option>
-                                                <option value="Perempuan" ${state.regForm.gender === 'Perempuan' ? 'selected' : ''}>Perempuan</option>
-                                            </select>
-                                        `}
-                                    </div>
-                                </div>
-
-                                <div class="bg-slate-50 p-3 md:p-4 rounded-xl md:rounded-2xl border-2 border-slate-100">
-                                    <label class="block text-xs md:text-sm font-black text-slate-700 mb-2 md:mb-3 flex items-center gap-2">Pilih Acara Sukan <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-500 fill-yellow-500"></i></label>
-                                    <div class="flex flex-wrap gap-2">${acaraBtns}</div>
-                                    ${state.selectedAcara.length === 0 ? `<p class="text-[10px] md:text-xs text-red-500 font-bold mt-3">*Sila pilih sekurang-kurangnya satu acara.</p>` : ''}
-                                </div>
-
-                                <button type="submit" ${state.selectedAcara.length === 0 || isLocked ? 'disabled' : ''} class="w-full py-3 md:py-4 mt-2 rounded-xl font-black text-base md:text-lg shadow-sm transition-all flex justify-center items-center gap-2 ${config.button} ${(isLocked || state.selectedAcara.length === 0) ? 'opacity-50 cursor-not-allowed' : ''}">
-                                    Sedia, Mula! 🚀
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Jadual -->
-                        <div class="lg:col-span-2 space-y-4 md:space-y-6">
-                            <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100">
-                                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-6 gap-3">
-                                    <h3 class="text-xl md:text-2xl font-black ${config.text}">Jadual Analisis Acara</h3>
-                                    <span class="${config.bgLight} ${config.text} px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-black border-2 ${config.border} shadow-sm self-end sm:self-auto">
-                                        ${filteredList.length} Murid
-                                    </span>
-                                </div>
-                                ${renderAnalysisTableHTML(config, activeCat, filteredList, availableEvents, true)}
-                            </div>
-                        </div>
                     </div>
                 </div>
             `;
@@ -722,38 +846,17 @@
                 `;
             }
 
-            if (state.deleteConfirmId) {
-                html += `
-                    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in no-print">
-                        <div class="bg-white rounded-3xl md:rounded-[2.5rem] max-w-sm w-full p-6 md:p-8 shadow-2xl border-4 border-red-200 animate-zoom-in text-center mx-auto">
-                            <div class="w-16 h-16 md:w-20 md:h-20 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
-                                <i data-lucide="trash-2" class="w-8 h-8 md:w-10 md:h-10"></i>
-                            </div>
-                            <h3 class="text-xl md:text-2xl font-black text-slate-800 mb-2">Padam Rekod?</h3>
-                            <p class="text-slate-500 font-bold text-xs md:text-sm mb-6 md:mb-8">Rekod murid ini akan dipadam secara kekal.</p>
-                            <div class="flex gap-2 md:gap-3">
-                                <button onclick="state.deleteConfirmId = null; renderApp();" class="flex-1 py-3 md:py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-black rounded-xl transition-all border-b-4 border-slate-300 active:border-b-0 active:translate-y-1 text-sm md:text-base">Batal</button>
-                                <button onclick="executeDelete()" class="flex-1 py-3 md:py-3.5 bg-red-500 hover:bg-red-400 text-white font-black rounded-xl transition-all border-b-4 border-red-700 active:border-b-0 active:translate-y-1 text-sm md:text-base">Ya, Padam</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
+            // Pratonton Cetakan A4 Landscape
             if (state.showPrintModal) {
-                const pCat = state.printCat;
                 const pHouse = state.printHouse;
                 const pConfig = houses[pHouse];
-                const pList = state.participants.filter(p => p.house === pHouse && p.category === pCat);
-                const pEvents = categoryEventsMapping[pCat];
 
-                // Kemaskini elemen tersembunyi khas untuk print
                 document.getElementById('print-container').innerHTML = `
                     <div class="mb-6 text-center border-b-4 border-slate-800 pb-4">
-                        <h1 class="text-3xl font-black uppercase">Jadual Analisis Acara Olahraga</h1>
-                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Kategori ${pCat}</h2>
+                        <h1 class="text-3xl font-black uppercase tracking-wider text-slate-900">Kejohanan Olahraga SK Simpang Empat 2026</h1>
+                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Rekod 38 Senarai Acara</h2>
                     </div>
-                    ${renderAnalysisTableHTML(pConfig, pCat, pList, pEvents, false)}
+                    ${renderAnalysisTableHTML(pConfig, pHouse, getEventsForHouse(pHouse))}
                 `;
 
                 html += `
@@ -772,16 +875,16 @@
                             <div class="p-2 md:p-8 overflow-y-auto overflow-x-auto bg-slate-200 flex-1 flex justify-start lg:justify-center items-start shadow-inner">
                                 <div class="bg-white p-6 md:p-12 shadow-xl border border-slate-300 w-max min-w-[297mm] min-h-[210mm] shrink-0 origin-top-left lg:origin-top scale-[0.4] sm:scale-[0.6] md:scale-75 lg:scale-100 transform transition-transform">
                                     <div class="mb-6 text-center border-b-[3px] border-slate-800 pb-4">
-                                        <h1 class="text-3xl font-black uppercase tracking-wider text-slate-900">Jadual Analisis Acara Olahraga</h1>
-                                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Kategori ${pCat}</h2>
+                                        <h1 class="text-3xl font-black uppercase tracking-wider text-slate-900">Kejohanan Olahraga SK Simpang Empat 2026</h1>
+                                        <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Rekod 38 Senarai Acara</h2>
                                     </div>
-                                    ${renderAnalysisTableHTML(pConfig, pCat, pList, pEvents, false)}
+                                    ${renderAnalysisTableHTML(pConfig, pHouse, getEventsForHouse(pHouse))}
                                 </div>
                             </div>
                             <div class="p-3 md:p-5 bg-white border-t-4 border-slate-100 flex justify-end gap-2 md:gap-3 shrink-0">
                                 <button onclick="state.showPrintModal = false; renderApp();" class="px-4 md:px-6 py-2.5 md:py-3.5 font-bold text-sm md:text-base text-slate-600 bg-slate-100 border-b-4 border-slate-200 hover:bg-slate-200 rounded-xl md:rounded-2xl">Batal</button>
                                 <button onclick="executePrint()" class="px-4 md:px-6 py-2.5 md:py-3.5 font-bold text-sm md:text-base text-white bg-indigo-600 border-b-4 border-indigo-800 hover:bg-indigo-500 rounded-xl md:rounded-2xl flex items-center gap-2">
-                                    <i data-lucide="printer" class="w-5 h-5 md:w-6 md:h-6"></i> Teruskan Cetak
+                                    <i data-lucide="printer" class="w-5 h-5"></i> Teruskan Cetak
                                 </button>
                             </div>
                         </div>
@@ -804,10 +907,8 @@
                 } else { state.activeTab = target; }
             } else { state.activeTab = target; }
             
-            // Clear inputs when switching tab
-            state.regForm = { name: '', kelas: '', gender: '' };
-            state.selectedAcara = [];
-            
+            state.searchKeyword = ''; // set semula carian
+            state.houseFilterAcara = 'Semua'; // set semula penapis
             renderApp();
         };
 
@@ -829,87 +930,27 @@
             }
             renderApp();
         };
+        
         window.closeAuthModal = () => { state.authModal.isOpen = false; renderApp(); };
 
         window.toggleLock = () => { state.adminConfig.isRegistrationLocked = !state.adminConfig.isRegistrationLocked; saveData(); renderApp(); };
         window.updateHousePass = (house, val) => { state.adminConfig.housePasswords[house] = val; saveData(); };
-        window.setMedalActiveCat = (cat) => { state.medalActiveCat = cat; renderApp(); };
-        window.handleMedalChange = (eventKey, medalType, house) => {
-            if (!state.medalResults[eventKey]) state.medalResults[eventKey] = {};
-            state.medalResults[eventKey][medalType] = house;
-            saveData(); renderApp();
-        };
-
-        window.setRegCat = (cat) => { 
-            state.regActiveCat = cat; 
-            state.selectedAcara = []; 
-            state.regForm = { name: '', kelas: '', gender: '' };
-            renderApp(); 
-        };
-        window.setManualMode = (val) => { 
-            state.isManualMode = val; 
-            state.selectedAcara = []; 
-            state.regForm = { name: '', kelas: '', gender: '' };
-            renderApp(); 
-        };
         
-        // Two-way Binding Handlers (Preserves text input in memory dynamically)
-        window.handleNameSelect = (val) => {
-            state.regForm.name = val;
-            const students = getStudentsForHouseAndCategory(state.activeTab, state.regActiveCat);
-            const s = students.find(st => st.name === val);
-            state.regForm.kelas = s ? s.kelas : '';
-            state.regForm.gender = s ? s.gender : '';
-            renderApp(); // Dropdown selection triggers full layout refresh safely
-        };
+        window.setAdminFilterAcara = (cat) => { state.adminFilterAcara = cat; renderApp(); };
+        window.setHouseFilterAcara = (cat) => { state.houseFilterAcara = cat; renderApp(); };
+        window.setSearchKeyword = (val) => { state.searchKeyword = val; renderApp(); };
 
-        window.handleManualNameInput = (val) => {
-            state.regForm.name = val;
-        };
-
-        window.handleKelasInput = (val) => {
-            state.regForm.kelas = val;
-        };
-
-        window.handleGenderSelect = (val) => {
-            state.regForm.gender = val;
-        };
-
-        window.toggleAcaraBtn = (a) => {
-            if (state.selectedAcara.includes(a)) { state.selectedAcara = state.selectedAcara.filter(x => x !== a); } 
-            else { state.selectedAcara.push(a); }
-            renderApp(); 
-        };
-
-        window.submitReg = (e) => {
-            e.preventDefault();
-            const name = state.regForm.name;
-            const kelas = state.regForm.kelas;
-            const gender = state.regForm.gender;
-            
-            if (!name || !kelas || !gender || state.selectedAcara.length === 0) return;
-            
-            handleAddParticipant({ 
-                id: Date.now(), 
-                name, 
-                kelas, 
-                gender, 
-                acara: [...state.selectedAcara], 
-                house: state.activeTab, 
-                category: state.regActiveCat 
-            });
-            
-            // Clean values on successful registration
-            state.selectedAcara = [];
-            state.regForm = { name: '', kelas: '', gender: '' };
+        window.handleMedalChange = (eventNo, medalType, house) => {
+            if (!state.medalResults[eventNo]) state.medalResults[eventNo] = {};
+            state.medalResults[eventNo][medalType] = house;
+            saveData(); 
             renderApp();
         };
 
-        window.confirmDeleteModal = (id) => { state.deleteConfirmId = id; renderApp(); };
-        window.executeDelete = () => {
-            const p = state.participants.find(x => x.id === state.deleteConfirmId);
-            if(p) handleDeleteParticipant(p.id, p.house);
-            state.deleteConfirmId = null;
+        window.handleMedalNameChange = (eventNo, medalType, name) => {
+            if (!state.medalResults[eventNo]) state.medalResults[eventNo] = {};
+            state.medalResults[eventNo][medalType + 'Nama'] = name;
+            saveData();
         };
 
         window.openPrintModal = () => { state.showPrintModal = true; renderApp(); };
@@ -922,7 +963,7 @@
             let contentHtml = '';
             if (state.activeTab === 'Utama') contentHtml = renderDashboard();
             else if (state.activeTab === 'Admin') contentHtml = renderAdminPanel();
-            else contentHtml = renderHouse();
+            else contentHtml = renderHouse(state.activeTab);
 
             const appHtml = `
                 ${renderHeader()}
@@ -933,14 +974,14 @@
             document.getElementById('app').innerHTML = appHtml;
             renderModals();
             
-            // Re-render Lucide Icons dynamically
+            // Render semula ikon Lucide
             lucide.createIcons();
         }
 
-        // Initialize Web Application
+        // Jalankan sistem apabila tetingkap dimuat sepenuhnya
         document.addEventListener('DOMContentLoaded', () => {
             renderApp();
-            fetchFromGoogleSheet(); // Background sync with sheet on boot
+            fetchFromGoogleSheet();
         });
 
     </script>
