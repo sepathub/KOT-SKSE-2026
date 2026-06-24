@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kejohanan Olahraga Tahunan SK Simpang Empat 2026</title>
+    <title>Sistem Sukan Sekolahku - SK Simpang Empat 2026</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Tailwind Config -->
     <script>
         tailwind.config = {
             theme: {
@@ -29,24 +27,22 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Global Styles -->
+    <!-- Gaya CSS Khas untuk Animasi dan Cetakan -->
     <style>
-        body { background-color: #E0F2FE; }
+        body { background-color: #F0F9FF; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
-        .animate-slide-in-bottom { animation: slideInBottom 0.5s ease-out forwards; }
-        .animate-slide-in-right { animation: slideInRight 0.3s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }
         .animate-zoom-in { animation: zoomIn 0.3s ease-out forwards; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInBottom { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
 
         @media print {
-            @page { size: A4 landscape; margin: 10mm; }
+            @page { size: A4 landscape; margin: 8mm; }
             body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background-color: white !important; }
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
@@ -66,9 +62,9 @@
     <!-- Cetakan Terselindung -->
     <div id="print-container" class="hidden print:block print-area bg-white p-4"></div>
 
-    <!-- LOGIC APPLICATION -->
     <script>
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx9q9QsxRc4rVpcYxiAGPQZhs3sHniDo88aLmVndt8Geabsokg_S6xovq419GIv2XjB/exec";
+        // URL Web App Google Sheets terkini anda
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzZvSyzUnt6Bu_zJQiM8NgzYHHVT8l2UEQZbqIt_F7xyD7jwGfMw_fryCuM-kokarLr/exec";
 
         // Senarai Penuh 38 Acara Rasmi Kejohanan Olahraga SK Simpang Empat 2026
         const officialEvents = [
@@ -112,6 +108,7 @@
             { no: "038", nama: "100 METER", kategori: "PRASEKOLAH" }
         ];
 
+        // Mendapatkan senarai acara yang bersesuaian mengikut kelayakan khas rumah sukan
         function getEventsForHouse(houseName) {
             let list = [...officialEvents];
             if (houseName === "PPKI") {
@@ -122,6 +119,7 @@
             return list;
         }
 
+        // Konfigurasi tema warna & gaya butang Rumah Sukan
         const houses = {
             Laksamana: { tabActive: 'bg-red-500 text-white border-b-4 border-red-700', text: 'text-red-600', border: 'border-red-400', bgLight: 'bg-red-100', bgSoft: 'bg-red-50', button: 'bg-red-500 hover:bg-red-400 border-b-4 border-red-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-red-500' },
             Bendahara: { tabActive: 'bg-blue-500 text-white border-b-4 border-blue-700', text: 'text-blue-600', border: 'border-blue-400', bgLight: 'bg-blue-100', bgSoft: 'bg-blue-50', button: 'bg-blue-500 hover:bg-blue-400 border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-blue-500' },
@@ -131,6 +129,7 @@
             "Pra Sekolah": { tabActive: 'bg-pink-500 text-white border-b-4 border-pink-700', text: 'text-pink-600', border: 'border-pink-400', bgLight: 'bg-pink-100', bgSoft: 'bg-pink-50', button: 'bg-pink-500 hover:bg-pink-400 border-b-4 border-pink-700 active:border-b-0 active:translate-y-1 text-white', iconColor: 'text-pink-500' }
         };
 
+        // Keadaan aplikasi (state)
         let state = {
             participants: JSON.parse(localStorage.getItem('olahragaDataSJK')) || [],
             studentDB: JSON.parse(localStorage.getItem('olahragaStudentDB')) || {},
@@ -157,11 +156,12 @@
             localStorage.setItem('olahragaMedalResults', JSON.stringify(state.medalResults));
         }
 
-        // PENAMBAHBAIKAN LOGIK TARIK DATA (FETCH) 
-        // Menggunakan redirect: 'follow' dan pengendalian ralat parse JSON.
-        async function fetchFromGoogleSheet() {
-            state.syncStatus = 'loading';
-            renderApp();
+        // Menggunakan redirect: 'follow' dan pengendalian ralat yang lancar
+        async function fetchFromGoogleSheet(isSilent = false) {
+            if (!isSilent) {
+                state.syncStatus = 'loading';
+                renderApp();
+            }
             
             try {
                 const response = await fetch(GOOGLE_SHEET_URL, {
@@ -169,11 +169,8 @@
                     redirect: 'follow'
                 });
                 
-                if (!response.ok) {
-                    throw new Error("HTTP Status: " + response.status);
-                }
+                if (!response.ok) throw new Error("HTTP Status: " + response.status);
 
-                // Baca teks dahulu untuk elak JSON Parse error jika script pulangkan HTML
                 const textResponse = await response.text();
                 
                 try {
@@ -185,14 +182,19 @@
                         } else {
                             state.studentDB = {};
                         }
+                        
+                        // Tarik data keputusan pingat dari awan sekiranya wujud
+                        if (result.medalResults && Object.keys(result.medalResults).length > 0) {
+                            state.medalResults = result.medalResults;
+                        }
+                        
                         state.syncStatus = 'online';
                     } else {
                         console.error("Apps Script Error:", result.message);
                         state.syncStatus = 'offline';
                     }
                 } catch (jsonError) {
-                    // Jika jatuh sini bermaksud url memulangkan halaman HTML (Permission salah)
-                    console.error("Permission ralat: Sila pastikan Web App diset ke 'Anyone'.");
+                    console.error("Permisi Ralat / Format Salah: Pastikan Web App diset ke 'Anyone'.");
                     state.syncStatus = 'offline';
                 }
 
@@ -204,6 +206,30 @@
             renderApp();
         }
 
+        // Fungsi menulis data ke Google Sheets menggunakan mode: 'no-cors' bagi menyelesaikan ralat CORS
+        async function postToCloud(payload) {
+            state.syncStatus = 'syncing';
+            renderApp();
+            try {
+                await fetch(GOOGLE_SHEET_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                });
+                
+                state.syncStatus = 'online';
+                // Lakukan tarikan latar belakang secara senyap untuk memastikan keselarasan data
+                setTimeout(() => {
+                    fetchFromGoogleSheet(true);
+                }, 2000);
+            } catch (error) {
+                console.error("Cloud post error:", error);
+                state.syncStatus = 'offline';
+            }
+            renderApp();
+        }
+
         function renderHeader() {
             let syncUI = '';
             if (state.syncStatus === 'online') {
@@ -211,7 +237,7 @@
             } else if (state.syncStatus === 'loading') {
                 syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-blue-100 text-blue-600 shadow-sm"><i data-lucide="refresh-cw" class="animate-spin w-3 h-3 md:w-4 md:h-4"></i><span>Menyegerak...</span></div>`;
             } else if (state.syncStatus === 'syncing') {
-                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-blue-100 text-blue-600 shadow-sm"><i data-lucide="refresh-cw" class="animate-spin w-3 h-3 md:w-4 md:h-4"></i><span>Menyimpan...</span></div>`;
+                syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-amber-100 text-amber-600 shadow-sm"><i data-lucide="refresh-cw" class="animate-spin w-3 h-3 md:w-4 md:h-4"></i><span>Menyimpan ke Awan...</span></div>`;
             } else {
                 syncUI = `<div class="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] md:text-xs font-black uppercase tracking-wider transition-all duration-300 bg-red-100 text-red-600 shadow-sm" title="Sila semak Web App URL atau Permissions"><i data-lucide="cloud-off" class="w-3 h-3 md:w-4 md:h-4"></i><span>Luar Talian</span></div>`;
             }
@@ -314,7 +340,6 @@
             const rankings = calculatePoints();
             const podiumOrder = [];
             
-            // Susunan visual podium responsif (Ke-2 Kiri, Juara Tengah, Ke-3 Kanan, diikuti yang lain)
             if (rankings.length > 1) podiumOrder.push({ ...rankings[1], rank: 2 });
             if (rankings.length > 0) podiumOrder.push({ ...rankings[0], rank: 1 });
             if (rankings.length > 2) podiumOrder.push({ ...rankings[2], rank: 3 });
@@ -326,7 +351,7 @@
             const eventTypePoints = getPointsByEventType();
 
             let html = `
-                <div class="space-y-4 md:space-y-6 animate-slide-in-bottom">
+                <div class="space-y-4 md:space-y-6 animate-slide-up">
                     <!-- Seksyen Podium Kedudukan Utama -->
                     <div class="bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-xl border-4 border-slate-100 overflow-hidden relative">
                         <h2 class="text-xl md:text-2xl font-black text-center mb-6 md:mb-8 text-slate-800 uppercase tracking-widest flex items-center justify-center gap-2 md:gap-3">
@@ -478,7 +503,6 @@
         function renderAnalysisTableHTML(houseConfig, houseName, filteredEventsList) {
             let tbody = '';
             
-            // Tapis hanya acara yang dimenangi pingat oleh rumah sukan ini
             const medalEvents = filteredEventsList.filter(event => {
                 const currentResult = state.medalResults[event.no] || {};
                 return currentResult.Emas === houseName || 
@@ -523,7 +547,7 @@
             }
 
             return `
-                <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                <div class="overflow-x-auto rounded-2xl border border-slate-100 bg-white">
                     <table class="w-full text-xs md:text-sm text-left border-collapse">
                         <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
                             <tr>
@@ -544,7 +568,6 @@
         function renderHouse(hName) {
             const config = houses[hName];
             
-            // Sediakan penapis mengikut jenis acara yang sah untuk rumah sukan ini
             let categoriesForHouse = ['Semua'];
             if (hName === 'PPKI') {
                 categoriesForHouse = ['Semua', 'LOMPAT JAUH', 'LONTAR PELURU', '100 METER'];
@@ -579,32 +602,31 @@
                 filteredEventsHouse = filteredEventsHouse.filter(e => e.no.includes(kw) || e.nama.toLowerCase().includes(kw) || e.kategori.toLowerCase().includes(kw));
             }
 
-            // Dapatkan pecahan ringkasan pingat kontinjen
             const tally = getMedalTally()[hName] || { emas: 0, perak: 0, gangsa: 0, total: 0 };
 
             return `
-                <div class="space-y-4 md:space-y-6 animate-slide-in-right relative">
+                <div class="space-y-4 md:space-y-6 animate-slide-up relative">
                     <!-- Info Kontinjen & Ringkasan Pingat -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="${config.bgLight} p-5 rounded-3xl border-4 ${config.border} flex flex-col justify-center">
+                        <div class="${config.bgLight} p-5 rounded-3xl border-4 ${config.border} flex flex-col justify-center shadow-md">
                             <h4 class="font-black text-xs md:text-sm uppercase tracking-wider ${config.text}">Kontinjen Rumah</h4>
                             <h3 class="text-2xl md:text-3xl font-black text-slate-800 uppercase mt-1">${hName}</h3>
                         </div>
-                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4 shadow-sm">
                             <span class="text-3xl">🥇</span>
                             <div>
                                 <p class="text-xs font-bold text-slate-400 uppercase">Pingat Emas</p>
                                 <p class="text-2xl font-black text-slate-800">${tally.emas}</p>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4 shadow-sm">
                             <span class="text-3xl">🥈</span>
                             <div>
                                 <p class="text-xs font-bold text-slate-400 uppercase">Pingat Perak</p>
                                 <p class="text-2xl font-black text-slate-800">${tally.perak}</p>
                             </div>
                         </div>
-                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4">
+                        <div class="bg-white p-5 rounded-3xl border-2 border-slate-100 flex items-center gap-4 shadow-sm">
                             <span class="text-3xl">🥉</span>
                             <div>
                                 <p class="text-xs font-bold text-slate-400 uppercase">Pingat Gangsa</p>
@@ -654,11 +676,10 @@
                 `;
             });
 
-            // Penapis Acara untuk Zon Cikgu
             const categoriesAdmin = ['Semua', '100 Meter', 'Lompat Jauh', 'Lompat Tinggi', 'Lontar Peluru'];
             let catsBtnHtml = '';
             categoriesAdmin.forEach(cat => {
-                catsBtnHtml += `<button onclick="setAdminFilterAcara('${cat}')" class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all ${state.adminFilterAcara === cat ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white'}">${cat}</button>`;
+                catsBtnHtml += `<button onclick="setAdminFilterAcara('${cat}')" class="px-4 py-2 md:px-5 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-black whitespace-nowrap transition-all ${state.adminFilterAcara === cat ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-white' || 'hover:bg-slate-100'}">${cat}</button>`;
             });
 
             let adminEventsFilteredList = officialEvents;
@@ -674,7 +695,7 @@
             let eventsHtml = '';
             adminEventsFilteredList.forEach(event => {
                 const currentResult = state.medalResults[event.no] || {};
-                const isSpecialEvent = ["035", "036", "037", "038"].includes(event.no);
+                const isSpecialEvent = ["035", "036", "037", "038"].includes(event.no) || true; // Aktifkan mod input nama bagi semua acara
                 
                 let medalsHtml = '';
                 ['Emas', 'Perak', 'Gangsa'].forEach((medalType, idx) => {
@@ -683,45 +704,33 @@
                     const selectBg = selectedHouse ? houses[selectedHouse].bgLight : 'bg-white';
                     const selectText = selectedHouse ? houses[selectedHouse].text : 'text-slate-700';
 
-                    let options = `<option value="">-- Tiada --</option>`;
+                    let options = `<option value="">-- Sila Pilih Kontinjen --</option>`;
                     Object.keys(houses).forEach(h => {
-                        options += `<option value="${h}" ${selectedHouse === h ? 'selected' : ''}>Rumah ${h}</option>`;
+                        options += `<option value="${h}" ${selectedHouse === h ? 'selected' : ''}>${h}</option>`;
                     });
 
-                    if (isSpecialEvent) {
-                        medalsHtml += `
-                            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
-                                <div class="flex items-center gap-1.5 min-w-[75px]">
-                                    <span class="text-lg md:text-xl w-6 text-center">${medalIcon}</span>
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">${medalType}</span>
-                                </div>
-                                <div class="flex flex-1 gap-2">
-                                    <select class="w-1/3 px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
-                                        onchange="handleMedalChange('${event.no}', '${medalType}', this.value)">
-                                        ${options}
-                                    </select>
-                                    <input type="text" placeholder="Nama pemenang..." 
-                                        class="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50 text-slate-800"
-                                        value="${currentResult[medalType + 'Nama'] || ''}"
-                                        oninput="handleMedalNameChange('${event.no}', '${medalType}', this.value)" />
-                                </div>
+                    medalsHtml += `
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+                            <div class="flex items-center gap-1.5 min-w-[75px]">
+                                <span class="text-lg md:text-xl w-6 text-center">${medalIcon}</span>
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">${medalType}</span>
                             </div>
-                        `;
-                    } else {
-                        medalsHtml += `
-                            <div class="flex flex-row items-center gap-2 md:gap-4">
-                                <span class="text-xl md:text-2xl w-6 md:w-8 text-center">${medalIcon}</span>
-                                <select class="flex-1 px-3 md:px-4 py-2 md:py-3 rounded-lg md:rounded-xl border-2 border-slate-200 text-sm md:text-base font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
+                            <div class="flex flex-1 gap-2">
+                                <select class="w-1/2 px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-black outline-none appearance-none cursor-pointer transition-all ${selectBg} ${selectText}"
                                     onchange="handleMedalChange('${event.no}', '${medalType}', this.value)">
                                     ${options}
                                 </select>
+                                <input type="text" placeholder="Nama pemenang / rekod..." 
+                                    class="w-1/2 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold outline-none focus:border-indigo-400 bg-slate-50 text-slate-800"
+                                    value="${currentResult[medalType + 'Nama'] || ''}"
+                                    oninput="handleMedalNameChange('${event.no}', '${medalType}', this.value)" />
                             </div>
-                        `;
-                    }
+                        </div>
+                    `;
                 });
 
                 eventsHtml += `
-                    <div class="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-yellow-300 transition-colors">
+                    <div class="bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-yellow-300 transition-colors shadow-sm">
                         <div class="flex items-center justify-between mb-4 pb-2 border-b-2 border-slate-200">
                             <div>
                                 <span class="bg-indigo-600 text-white text-[10px] md:text-xs font-black px-2.5 py-1 rounded-md uppercase tracking-wider mr-2">ACARA ${event.no}</span>
@@ -807,7 +816,7 @@
                                 Muat Semula Pangkalan Data
                             </button>
                         </div>
-                        <div class="flex items-center bg-white p-3 md:p-4 rounded-xl border-2 border-emerald-200">
+                        <div class="flex items-center bg-white p-3 md:p-4 rounded-xl border-2 border-emerald-200 shadow-inner">
                             <input type="text" readonly value="${GOOGLE_SHEET_URL}" class="w-full bg-transparent font-bold text-slate-500 text-xs md:text-sm outline-none cursor-text" />
                         </div>
                     </div>
@@ -825,7 +834,7 @@
                             
                             <div class="flex flex-col sm:flex-row gap-2">
                                 <div class="relative">
-                                    <input type="text" placeholder="Cari acara..." value="${state.searchKeyword}" oninput="setSearchKeyword(this.value)" class="w-full sm:w-64 px-4 py-2 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-400 pl-10" />
+                                    <input type="text" placeholder="Cari acara..." value="${state.searchKeyword}" oninput="setSearchKeyword(this.value)" class="w-full sm:w-64 px-4 py-2 border-2 border-slate-200 rounded-xl font-bold text-sm outline-none focus:border-indigo-400 pl-10 bg-white" />
                                     <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
                                 </div>
                                 <div class="flex space-x-1 bg-slate-100 p-1.5 rounded-xl overflow-x-auto hide-scrollbar">
@@ -874,7 +883,7 @@
                 const pConfig = houses[pHouse];
 
                 document.getElementById('print-container').innerHTML = `
-                    <div class="mb-6 text-center border-b-4 border-slate-800 pb-4">
+                    <div class="mb-6 text-center border-b-4 border-slate-800 pb-4 bg-white">
                         <h1 class="text-3xl font-black uppercase tracking-wider text-slate-900">Kejohanan Olahraga SK Simpang Empat 2026</h1>
                         <h2 class="text-2xl font-black mt-2 ${pConfig.text}">Rumah ${pHouse} - Rekod 38 Senarai Acara</h2>
                     </div>
@@ -929,8 +938,8 @@
                 } else { state.activeTab = target; }
             } else { state.activeTab = target; }
             
-            state.searchKeyword = ''; // set semula carian
-            state.houseFilterAcara = 'Semua'; // set semula penapis
+            state.searchKeyword = ''; 
+            state.houseFilterAcara = 'Semua'; 
             renderApp();
         };
 
@@ -967,12 +976,30 @@
             state.medalResults[eventNo][medalType] = house;
             saveData(); 
             renderApp();
+            
+            // PUSH: Kemas kini pingat terus ke Google Sheets
+            postToCloud({
+                action: 'update_medals',
+                medalResults: state.medalResults
+            });
         };
 
+        let medalSyncTimer = null;
         window.handleMedalNameChange = (eventNo, medalType, name) => {
             if (!state.medalResults[eventNo]) state.medalResults[eventNo] = {};
             state.medalResults[eventNo][medalType + 'Nama'] = name;
             saveData();
+            
+            // Debounce simpan ke awan sebanyak 1.5 saat bagi mengelakkan bebanan rangkaian semasa menaip
+            if (medalSyncTimer) clearTimeout(medalSyncTimer);
+            state.syncStatus = 'syncing';
+            renderApp();
+            medalSyncTimer = setTimeout(() => {
+                postToCloud({
+                    action: 'update_medals',
+                    medalResults: state.medalResults
+                });
+            }, 1500);
         };
 
         window.openPrintModal = () => { state.showPrintModal = true; renderApp(); };
@@ -996,11 +1023,11 @@
             document.getElementById('app').innerHTML = appHtml;
             renderModals();
             
-            // Render semula ikon Lucide
+            // Jana semula visual ikon Lucide
             lucide.createIcons();
         }
 
-        // Jalankan sistem apabila tetingkap dimuat sepenuhnya
+        // Permulaan sistem pada muatan pertama pelayar
         document.addEventListener('DOMContentLoaded', () => {
             renderApp();
             fetchFromGoogleSheet();
